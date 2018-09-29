@@ -11,23 +11,20 @@ public class PlayerController : MonoBehaviour {
     private Actor actor;
     private Controller2D controller2D;
 
-    private static readonly float JUMP_HOLD_SCALE = 0.9f;
-
     // Use this for initialization
     void Start() {
         actor = GetComponent<Actor>();
         controller2D = GetComponent<Controller2D>();
-        GameManager.Instance.players.Add(actor);
     }
 
     // Update is called once per frame
     void Update() {
-        controller2D.Walk(Input.GetAxis("Horizontal"));
+        controller2D.Walk(Input.GetAxisRaw("Horizontal"));
         if (Input.GetButtonDown("Jump"))
             controller2D.Jump();
         if (Input.GetButton("Jump"))
-            controller2D.gravityScale = JUMP_HOLD_SCALE;
+            controller2D.SetGravityScale(actor.jumpHoldScale);
         else
-            controller2D.gravityScale = 1;
+            controller2D.SetGravityScale(1);
     }
 }

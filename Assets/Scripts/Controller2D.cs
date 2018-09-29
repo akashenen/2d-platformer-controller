@@ -36,7 +36,7 @@ public class Controller2D : MonoBehaviour {
     private float vSpeed = 0;
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
-    public float gravityScale = 1;
+    private float gravityScale = 1;
 
     // Public propoerties
     public bool FacingRight { get; set; } // false == left, true == right
@@ -161,14 +161,16 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="direction">-1 to 1; negative values = left; positive values = right</param>
     public void Walk(float direction) {
-        if (!KnockedBack) {
-            if (CanMove()) {
-                if (direction < 0)
-                    FacingRight = false;
-                if (direction > 0)
-                    FacingRight = true;
-                hSpeed = direction * actor.moveSpeed;
+        if (CanMove()) {
+            if (direction < 0)
+                FacingRight = false;
+            if (direction > 0)
+                FacingRight = true;
+            hSpeed += direction * (1 / actor.accelerationTime) * actor.moveSpeed * Time.deltaTime;
+            if (direction == 0) {
+                hSpeed = Mathf.MoveTowards(hSpeed, 0, (1 / actor.decelerationTime) * actor.moveSpeed * Time.deltaTime);
             }
+            hSpeed = Mathf.Clamp(hSpeed, -actor.moveSpeed, actor.moveSpeed);
         }
     }
 
@@ -182,6 +184,14 @@ public class Controller2D : MonoBehaviour {
             if (!collisions.below)
                 actor.extraJumps--;
         }
+    }
+
+    /// <summary>
+    /// Used to alter gravity strenght for jump hold or other effects
+    /// </summary>
+    /// <param name="gravityScale">Desired gravity scale</param>
+    public void SetGravityScale(float gravityScale) {
+        this.gravityScale = gravityScale;
     }
 
     /// <summary>

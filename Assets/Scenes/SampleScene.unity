@@ -886,10 +886,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ad980451443d70438faac0bc6c235a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LookaheadTime: 0.5
+  m_LookaheadTime: 0.6
   m_LookaheadSmoothing: 10
   m_LookaheadIgnoreY: 1
-  m_XDamping: 1
+  m_XDamping: 0.8
   m_YDamping: 1
   m_ZDamping: 1
   m_ScreenX: 0.5
@@ -1097,14 +1097,6 @@ PrefabInstance:
     - target: {fileID: 41342835647678644, guid: 4fb49a1922deb8249bfdbba50d98dbf1, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 41342835647678600, guid: 4fb49a1922deb8249bfdbba50d98dbf1, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: d5a639cddfc74ee4e81a0489be02d49d, type: 2}
-    - target: {fileID: 41342835647678606, guid: 4fb49a1922deb8249bfdbba50d98dbf1, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4fb49a1922deb8249bfdbba50d98dbf1, type: 3}

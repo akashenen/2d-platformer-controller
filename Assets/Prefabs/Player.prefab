@@ -93,7 +93,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce1e11311d1d79e4dbb70bb8a8a5928f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gravityScale: 1
 --- !u!114 &41342835647678603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -106,11 +105,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a616d1a0dc50f84e9873695caa70ead, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 7
+  moveSpeed: 8
+  accelerationTime: 0.5
+  decelerationTime: 0.5
   maxExtraJumps: 1
   extraJumps: 1
   jumpHeight: 2.2
+  jumpHoldScale: 0.6
   groundCheckOffset: 0.1
+  advancedAirControl: 0
+  airAcceleration: 0
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0
