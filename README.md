@@ -24,6 +24,15 @@ To use this project you need Unity 2017.1 or higher.
 
 The main classes used in this project are the Actor, used mainly for attributes and other adjustable values, and the Controlled2D, which handles all the movement and collision algorithms.
 
+#### Movement values
+* **maxSpeed:** The maximum horizontal speed the actor can reach
+* **accelerationTime:** How much time (in seconds) an actor will take to reach maximum horizontal speed. A value of 0 will allow the actor to reach maximum speed instantly.
+* **decelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed. A value of 0 will allow the actor to stop instantly.
+* **maxExtraJumps:** How many times an actor can jump again without touching the ground.
+* **extraJumps:** How many extra jumps the actor has currently.
+* **jumpHeight:** How high (in units) the actor can jump.
+* **jumpHoldScale:** How much the actor is affected by gravity while the jump button is held. This affects not only jump height but also falling speed while holding the button. A value of 1 will make holding the button have no effect.
+
 ## Authors
 
 * [Akashenen](https://github.com/akashenen/)

@@ -10,14 +10,11 @@ using UnityEngine;
 public class Actor : MonoBehaviour {
 
     // Actor's base stats
-    public float moveSpeed;
+    public float maxSpeed;
     public float accelerationTime;
     public float decelerationTime;
     public int maxExtraJumps;
     public int extraJumps;
     public float jumpHeight;
     public float jumpHoldScale;
-    public float groundCheckOffset = 0.1f;
-    public bool advancedAirControl = false;
-    public float airAcceleration;
 }
