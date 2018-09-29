@@ -31,11 +31,4 @@ public class Actor : MonoBehaviour {
         controller2D = GetComponent<Controller2D>();
         animator = GetComponent<Animator>();
     }
-
-    // Update is called once per frame
-    void Update() {
-        controller2D.Move();
-        controller2D.HandleKnockback();
-    }
-
 }

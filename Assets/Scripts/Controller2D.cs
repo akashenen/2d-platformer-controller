@@ -22,7 +22,7 @@ public class Controller2D : MonoBehaviour {
     // Animation attributes and names
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
     private static readonly string ANIMATION_V_SPEED = "vSpeed";
-    private static readonly string ANIMATION_IDLE = "idle";
+    private static readonly string ANIMATION_JUMP = "jump";
 
     // Other Componenents
     private Actor actor;
@@ -54,6 +54,12 @@ public class Controller2D : MonoBehaviour {
         KnockedBack = false;
         OnLadder = false;
         CalculateSpacing();
+    }
+
+    // Update is called once per frame
+    void Update() {
+        Move();
+        HandleKnockback();
     }
 
     /// <summary>
@@ -99,6 +105,8 @@ public class Controller2D : MonoBehaviour {
             if (collisions.below) actor.extraJumps = actor.maxExtraJumps;
             vSpeed = 0;
         }
+        animator.SetFloat(ANIMATION_H_SPEED, hSpeed);
+        animator.SetFloat(ANIMATION_V_SPEED, vSpeed);
     }
 
     /// <summary>
@@ -160,9 +168,6 @@ public class Controller2D : MonoBehaviour {
                 if (direction > 0)
                     FacingRight = true;
                 hSpeed = direction * actor.moveSpeed;
-                //animator.SetFloat(ANIMATION_H_SPEED, hSpeed);
-            } else {
-                //animator.SetTrigger(ANIMATION_IDLE);
             }
         }
     }
@@ -173,6 +178,7 @@ public class Controller2D : MonoBehaviour {
     public void Jump() {
         if (CanMove() && (collisions.below || actor.extraJumps > 0)) {
             vSpeed = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * actor.jumpHeight);
+            animator.SetTrigger(ANIMATION_JUMP);
             if (!collisions.below)
                 actor.extraJumps--;
         }
