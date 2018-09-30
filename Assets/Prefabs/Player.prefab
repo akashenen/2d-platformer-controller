@@ -105,16 +105,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a616d1a0dc50f84e9873695caa70ead, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 8
-  accelerationTime: 0.5
-  decelerationTime: 0.5
+  maxSpeed: 8
+  accelerationTime: 0.3
+  decelerationTime: 0.3
   maxExtraJumps: 1
   extraJumps: 1
-  jumpHeight: 2.2
+  jumpHeight: 2
   jumpHoldScale: 0.6
-  groundCheckOffset: 0.1
-  advancedAirControl: 0
-  airAcceleration: 0
+  advancedAirControl: 1
+  airAccelerationTime: 1
+  airDecelerationTime: 1
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -17,4 +17,7 @@ public class Actor : MonoBehaviour {
     public int extraJumps;
     public float jumpHeight;
     public float jumpHoldScale;
+    public bool advancedAirControl = false;
+    public float airAccelerationTime;
+    public float airDecelerationTime;
 }

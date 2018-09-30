@@ -166,14 +166,23 @@ public class Controller2D : MonoBehaviour {
                 FacingRight = false;
             if (direction > 0)
                 FacingRight = true;
-            if (actor.accelerationTime > 0) {
-                hSpeed += direction * (1 / actor.accelerationTime) * actor.maxSpeed * Time.deltaTime;
+            float acc = 0f;
+            float dec = 0f;
+            if (actor.advancedAirControl && !collisions.below) {
+                acc = actor.airAccelerationTime;
+                dec = actor.airDecelerationTime;
             } else {
-                hSpeed = actor.maxSpeed;
+                acc = actor.accelerationTime;
+                dec = actor.decelerationTime;
             }
-            if (direction == 0) {
-                if (actor.decelerationTime > 0) {
-                    hSpeed = Mathf.MoveTowards(hSpeed, 0, (1 / actor.decelerationTime) * actor.maxSpeed * Time.deltaTime);
+            if (acc > 0) {
+                hSpeed += direction * (1 / acc) * actor.maxSpeed * Time.deltaTime;
+            } else {
+                hSpeed = actor.maxSpeed * direction;
+            }
+            if (direction == 0 || Mathf.Sign(direction) != Mathf.Sign(hSpeed)) {
+                if (dec > 0) {
+                    hSpeed = Mathf.MoveTowards(hSpeed, 0, (1 / dec) * actor.maxSpeed * Time.deltaTime);
                 } else {
                     hSpeed = 0;
                 }
