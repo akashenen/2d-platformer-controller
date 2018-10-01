@@ -22,7 +22,7 @@ There are some different of ways of implementing character movement and controls
 
 To use this project you need Unity 2017.1 or higher. 
 
-The main classes used in this project are the Actor, used mainly for attributes and other adjustable values, and the Controlled2D, which handles all the movement and collision algorithms.
+The main classes used in this project are the [Actor](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Actor.cs), used mainly for attributes and other adjustable values, and the [Controller2D](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Controller2D.cs), which handles all the movement and collision algorithms.
 
 #### Movement values
 * **maxSpeed:** The maximum horizontal speed the actor can reach
@@ -32,6 +32,9 @@ The main classes used in this project are the Actor, used mainly for attributes 
 * **extraJumps:** How many extra jumps the actor has currently.
 * **jumpHeight:** How high (in units) the actor can jump.
 * **jumpHoldScale:** How much the actor is affected by gravity while the jump button is held. This affects not only jump height but also falling speed while holding the button. A value of 1 will make holding the button have no effect.
+* **advancedAirControl:** If enabled, will allow you to set values for acceleration and deceleration while in the air, making it possible to have more stiff (or otherwise) controls while airborne.
+* **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps.
+* **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground.
 
 ## Authors
 
