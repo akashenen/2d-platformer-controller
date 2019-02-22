@@ -115,6 +115,10 @@ MonoBehaviour:
   advancedAirControl: 1
   airAccelerationTime: 0.6
   airDecelerationTime: 0.6
+  canWallSlide: 1
+  wallSlideVelocity: 2
+  canWallJump: 1
+  wallJumpVelocity: 5
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0

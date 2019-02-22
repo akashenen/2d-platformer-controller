@@ -101,12 +101,25 @@ public class Controller2D : MonoBehaviour {
         UpdateRaycastOrigins();
         collisions.Reset();
         vSpeed += GRAVITY * gravityScale * Time.deltaTime;
+        if (horizontalHit && actor.canWallSlide && vSpeed < 0) {
+            vSpeed = -actor.wallSlideVelocity;
+        }
         Vector2 velocity = new Vector2(hSpeed * Time.deltaTime, vSpeed * Time.deltaTime);
-        if (velocity.x != 0) HorizontalCollisions(ref velocity);
-        if (velocity.y != 0) VerticalCollisions(ref velocity);
+        if (velocity.x != 0) {
+            HorizontalCollisions(ref velocity);
+        } else {
+            horizontalHit = new RaycastHit2D();
+        }
+        if (velocity.y != 0) {
+            VerticalCollisions(ref velocity);
+        }
         transform.Translate(velocity);
+        // Resets horizontal velocity on collision
+        if (horizontalHit) {
+            hSpeed = 0;
+        }
         // Checks for ground and ceiling, resets jumps if grounded
-        if (collisions.below || collisions.above) {
+        if (verticalHit) {
             if (collisions.below) actor.extraJumps = actor.maxExtraJumps;
             vSpeed = 0;
         }
@@ -208,12 +221,21 @@ public class Controller2D : MonoBehaviour {
     ///  Makes the actor jump if possible
     /// </summary>
     public void Jump() {
-        if (CanMove() && (collisions.below || actor.extraJumps > 0)) {
-            vSpeed = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * actor.jumpHeight);
-            animator.SetTrigger(ANIMATION_JUMP);
-            if (!collisions.below)
-                actor.extraJumps--;
-            RestorePlatformCollisions();
+        if (CanMove()) {
+            if (collisions.below || actor.extraJumps > 0 || (actor.canWallJump && horizontalHit)) {
+                vSpeed = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * actor.jumpHeight);
+                animator.SetTrigger(ANIMATION_JUMP);
+                // wall jump
+                if (actor.canWallJump && horizontalHit && !collisions.below) {
+                    hSpeed = collisions.left ? actor.wallJumpVelocity : -actor.wallJumpVelocity;
+                    actor.extraJumps = actor.maxExtraJumps;
+                } else {
+                    // air jump
+                    if (!collisions.below)
+                        actor.extraJumps--;
+                }
+                RestorePlatformCollisions();
+            }
         }
     }
 

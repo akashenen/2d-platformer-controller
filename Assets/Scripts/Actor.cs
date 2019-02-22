@@ -20,4 +20,8 @@ public class Actor : MonoBehaviour {
     public bool advancedAirControl = false;
     public float airAccelerationTime;
     public float airDecelerationTime;
+    public bool canWallSlide;
+    public float wallSlideVelocity;
+    public bool canWallJump;
+    public float wallJumpVelocity;
 }
