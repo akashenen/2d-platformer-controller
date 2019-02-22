@@ -4,6 +4,8 @@
 
 There are some different of ways of implementing character movement and controls for 2D platformers, each with its own pros and cons. The Unity engine offers very complete 2D physics features that allow you to create realistic platformer mechanics easily. Sometimes, however, you might want a more precise and controlled input and movement, rather than a realistic one. This approach makes use of [raycasts](https://docs.unity3d.com/ScriptReference/Physics.Raycast.html) and manual calculations to deal with movement and collisions of an actor in the 2D platformer world in a simple way, while also allowing you to easily change values to tweak how it behaves.
 
+![](https://github.com/akashenen/2d-platformer-controller/blob/master/Gifs/demo.gif)
+
 #### Features
 * Smooth and precise movement
 * Allows for multiple jumps
