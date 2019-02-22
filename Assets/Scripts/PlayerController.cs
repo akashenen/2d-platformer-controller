@@ -20,8 +20,13 @@ public class PlayerController : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         controller2D.Walk(Input.GetAxisRaw("Horizontal"));
-        if (Input.GetButtonDown("Jump"))
-            controller2D.Jump();
+        if (Input.GetButtonDown("Jump")) {
+            if (Input.GetAxisRaw("Vertical") < 0) {
+                controller2D.JumpDown();
+            } else {
+                controller2D.Jump();
+            }
+        }
         if (Input.GetButton("Jump"))
             controller2D.SetGravityScale(actor.jumpHoldScale);
         else

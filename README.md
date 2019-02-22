@@ -8,14 +8,16 @@ There are some different of ways of implementing character movement and controls
 * Smooth and precise movement
 * Allows for multiple jumps
 * Easily add animations
+* Jump-through platforms
   
 #### Planned Features
 * Ladders/Ropes
-* Jump-through platforms
 * Moving platforms
 * Slopes
 * Ledge grabs
 * Wall climbing and sliding
+* Running
+* Ducking/Crawling
 
 
 ## Getting Started

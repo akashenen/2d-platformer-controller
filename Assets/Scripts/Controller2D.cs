@@ -11,14 +11,16 @@ using UnityEngine;
 public class Controller2D : MonoBehaviour {
     // Info that can be used in other classes
     public static readonly string GROUND_LAYER = "Ground";
+    public static readonly string PLATFORM_LAYER = "Platform";
     public static readonly string PLAYER_LAYER = "Player";
     public static readonly string ENEMY_LAYER = "Enemy";
     public static readonly float GRAVITY = -50f;
     public static readonly float KNOCK_BACK_REDUCTION = 10f;
-    public static readonly float SKIN_WIDTH = 0.015f;
     // Colision parameters
     private static readonly float BOUNDS_EXPANSION = -2;
     private static readonly float RAY_COUNT = 4;
+    public static readonly float SKIN_WIDTH = 0.015f;
+    public static readonly float FALLTHROUGH_DELAY = 0.2f;
     // Animation attributes and names
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
     private static readonly string ANIMATION_V_SPEED = "vSpeed";
@@ -37,6 +39,9 @@ public class Controller2D : MonoBehaviour {
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
     private float gravityScale = 1;
+    private RaycastHit2D verticalHit;
+    private RaycastHit2D horizontalHit;
+    private bool ignorePlatformCollisions;
 
     // Public propoerties
     public bool FacingRight { get; set; } // false == left, true == right
@@ -117,15 +122,16 @@ public class Controller2D : MonoBehaviour {
     private void HorizontalCollisions(ref Vector2 velocity) {
         float directionX = Mathf.Sign(velocity.x);
         float rayLength = Mathf.Abs(velocity.x) + SKIN_WIDTH;
+        horizontalHit = new RaycastHit2D();
         for (int i = 0; i < RAY_COUNT; i++) {
             Vector2 rayOrigin = directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
             rayOrigin += Vector2.up * (horizontalRaySpacing * i);
-            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX,
+            horizontalHit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX,
                 rayLength, LayerMask.GetMask(GROUND_LAYER));
             Debug.DrawRay(rayOrigin, Vector2.right * directionX * rayLength, Color.red);
-            if (hit) {
-                velocity.x = (hit.distance - SKIN_WIDTH) * directionX;
-                rayLength = hit.distance;
+            if (horizontalHit) {
+                velocity.x = (horizontalHit.distance - SKIN_WIDTH) * directionX;
+                rayLength = horizontalHit.distance;
                 collisions.left = directionX < 0;
                 collisions.right = directionX > 0;
             }
@@ -140,17 +146,24 @@ public class Controller2D : MonoBehaviour {
     private void VerticalCollisions(ref Vector2 velocity) {
         float directionY = Mathf.Sign(velocity.y);
         float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
+        verticalHit = new RaycastHit2D();
         for (int i = 0; i < RAY_COUNT; i++) {
             Vector2 rayOrigin = directionY == -1 ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
             rayOrigin += Vector2.right * (verticalRaySpacing * i + velocity.x);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
                 rayLength, LayerMask.GetMask(GROUND_LAYER));
             Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength, Color.red);
+            // for jump-through platforms
+            if (!ignorePlatformCollisions && directionY < 0 && !hit) {
+                hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
+                    rayLength, LayerMask.GetMask(PLATFORM_LAYER));
+            }
             if (hit) {
                 velocity.y = (hit.distance - SKIN_WIDTH) * directionY;
                 rayLength = hit.distance;
                 collisions.above = directionY > 0;
                 collisions.below = directionY < 0;
+                verticalHit = hit;
             }
         }
     }
@@ -200,11 +213,35 @@ public class Controller2D : MonoBehaviour {
             animator.SetTrigger(ANIMATION_JUMP);
             if (!collisions.below)
                 actor.extraJumps--;
+            RestorePlatformCollisions();
         }
     }
 
     /// <summary>
-    /// Used to alter gravity strenght for jump hold or other effects
+    /// If the actor is standing on a platform, will ignore platforms briefly,
+    /// otherwise it will just jump
+    /// </summary>
+    public void JumpDown() {
+        if (CanMove()) {
+            if (verticalHit && verticalHit.collider.gameObject.layer == LayerMask.NameToLayer(PLATFORM_LAYER)) {
+                ignorePlatformCollisions = true;
+                Invoke("RestorePlatformCollisions", FALLTHROUGH_DELAY);
+            } else {
+                Jump();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Restores plaftorm collisions after the set amount of time has passed
+    /// or the actor has jumped
+    /// </summary>
+    private void RestorePlatformCollisions() {
+        ignorePlatformCollisions = false;
+    }
+
+    /// <summary>
+    /// Used to alter gravity strength for jump hold or other effects
     /// </summary>
     /// <param name="gravityScale">Desired gravity scale</param>
     public void SetGravityScale(float gravityScale) {

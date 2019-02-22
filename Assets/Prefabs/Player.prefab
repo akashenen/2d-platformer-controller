@@ -113,8 +113,8 @@ MonoBehaviour:
   jumpHeight: 2
   jumpHoldScale: 0.6
   advancedAirControl: 1
-  airAccelerationTime: 1
-  airDecelerationTime: 1
+  airAccelerationTime: 0.6
+  airDecelerationTime: 0.6
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0
