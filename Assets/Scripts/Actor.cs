@@ -10,18 +10,32 @@ using UnityEngine;
 public class Actor : MonoBehaviour {
 
     // Actor's base stats
+    [Header("Horizontal Control")]
     public float maxSpeed;
     public float accelerationTime;
     public float decelerationTime;
+    [Header("Air Control")]
     public int maxExtraJumps;
-    public int extraJumps;
     public float jumpHeight;
     public float jumpHoldScale;
-    public bool advancedAirControl = false;
+    public bool advancedAirControl;
     public float airAccelerationTime;
     public float airDecelerationTime;
+    [Header("Wall Sliding/Jumping")]
     public bool canWallSlide;
     public float wallSlideVelocity;
     public bool canWallJump;
     public float wallJumpVelocity;
+    [Header("Dashing")]
+    public bool canDash;
+    public bool omnidirectionalDash;
+    public bool dashDownSlopes;
+    public bool canJumpDuringDash;
+    public bool jumpCancelStagger;
+    public float dashDistance;
+    public float dashSpeed;
+    public float dashStagger;
+    public float staggerSpeedFalloff;
+    public float maxDashCooldown;
+    public int maxAirDashes;
 }

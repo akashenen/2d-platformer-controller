@@ -19,9 +19,10 @@ public class PlayerController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        controller2D.Walk(Input.GetAxisRaw("Horizontal"));
+        Vector2 axis = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        controller2D.Walk(axis.x);
         if (Input.GetButtonDown("Jump")) {
-            if (Input.GetAxisRaw("Vertical") < 0) {
+            if (axis.y < 0) {
                 controller2D.JumpDown();
             } else {
                 controller2D.Jump();
@@ -31,5 +32,8 @@ public class PlayerController : MonoBehaviour {
             controller2D.SetGravityScale(actor.jumpHoldScale);
         else
             controller2D.SetGravityScale(1);
+        if (Input.GetButtonDown("Dash")) {
+            controller2D.Dash(axis);
+        }
     }
 }

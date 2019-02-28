@@ -109,7 +109,6 @@ MonoBehaviour:
   accelerationTime: 0.3
   decelerationTime: 0.3
   maxExtraJumps: 1
-  extraJumps: 1
   jumpHeight: 2
   jumpHoldScale: 0.6
   advancedAirControl: 1
@@ -119,6 +118,17 @@ MonoBehaviour:
   wallSlideVelocity: 2
   canWallJump: 1
   wallJumpVelocity: 5
+  canDash: 1
+  omnidirectionalDash: 1
+  dashDownSlopes: 0
+  canJumpDuringDash: 1
+  jumpCancelStagger: 1
+  dashDistance: 3
+  dashSpeed: 15
+  dashStagger: 0.1
+  staggerSpeedFalloff: 20
+  maxDashCooldown: 0.5
+  maxAirDashes: 2
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0

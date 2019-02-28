@@ -15,7 +15,8 @@ public class Controller2D : MonoBehaviour {
     public static readonly string PLAYER_LAYER = "Player";
     public static readonly string ENEMY_LAYER = "Enemy";
     public static readonly float GRAVITY = -50f;
-    public static readonly float KNOCK_BACK_REDUCTION = 10f;
+    public static readonly float AIR_FRICTION = 10f;
+    public static readonly float MIN_OVERSHOOT_ADJUST = 0.2f;
     // Colision parameters
     private static readonly float BOUNDS_EXPANSION = -2;
     private static readonly float RAY_COUNT = 4;
@@ -26,6 +27,10 @@ public class Controller2D : MonoBehaviour {
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
     private static readonly string ANIMATION_V_SPEED = "vSpeed";
     private static readonly string ANIMATION_JUMP = "jump";
+    private static readonly string ANIMATION_GROUNDED = "grounded";
+    private static readonly string ANIMATION_DASHING = "dashing";
+    private static readonly string ANIMATION_WALL = "onWall";
+    private static readonly string ANIMATION_FACING = "facingRight";
 
     // Other Componenents
     private Actor actor;
@@ -35,17 +40,21 @@ public class Controller2D : MonoBehaviour {
     // Physics properties
     private RaycastOrigins raycastOrigins;
     private CollisionInfo collisions;
-    private float hSpeed = 0;
-    private float vSpeed = 0;
+    private Vector2 speed = new Vector2();
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
     private float gravityScale = 1;
-    private bool ignorePlatformCollisions;
+    private bool ignorePlatformCollisions = false;
+    private int extraJumps = 0;
+    private int airDashes = 0;
+    private float dashCooldown = 0;
+    private float dashStaggerTime = 0;
 
     // Public propoerties
     public bool FacingRight { get; set; } // false == left, true == right
     public bool OnLadder { get; set; }
     public bool KnockedBack { get; set; }
+    public bool Dashing { get; set; }
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
@@ -62,8 +71,9 @@ public class Controller2D : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        Move();
+        HandleDash();
         HandleKnockback();
+        Move();
     }
 
     /// <summary>
@@ -99,22 +109,29 @@ public class Controller2D : MonoBehaviour {
     public void Move() {
         UpdateRaycastOrigins();
         collisions.Reset();
-        vSpeed += GRAVITY * gravityScale * Time.deltaTime;
-        Vector2 velocity = new Vector2(hSpeed * Time.deltaTime, vSpeed * Time.deltaTime);
+        if (!Dashing && dashStaggerTime <= 0) {
+            speed.y += GRAVITY * gravityScale * Time.deltaTime;
+        }
+        Vector2 velocity = new Vector2(speed.x * Time.deltaTime, speed.y * Time.deltaTime);
         float xDir = Mathf.Sign(velocity.x);
         CheckGround(xDir);
         if (velocity.x != 0) {
             // Slope checks and processing
-            if (velocity.y < 0) {
+            if (velocity.y <= 0) {
                 if (collisions.onGround) {
                     CheckNextSlope(xDir);
-                } else if (collisions.nextSlopeAngle != 0) {
-                    if (collisions.nextSlopeDirection == xDir)
-                        SnapToSlope(ref velocity);
+                } else {
+                    if (collisions.nextSlopeAngle != 0) {
+                        if (collisions.nextSlopeDirection == xDir && (!Dashing || actor.dashDownSlopes)) {
+                            SnapToSlope(ref velocity);
+                        }
+                    }
                 }
                 if (collisions.onSlope) {
                     if (collisions.groundDirection == xDir) {
-                        DescendSlope(ref velocity);
+                        if (!Dashing || actor.dashDownSlopes) {
+                            DescendSlope(ref velocity);
+                        }
                     } else {
                         ClimbSlope(ref velocity);
                     }
@@ -124,12 +141,12 @@ public class Controller2D : MonoBehaviour {
         }
         if (collisions.hHit && actor.canWallSlide && velocity.y < 0) {
             velocity.y = -actor.wallSlideVelocity * Time.deltaTime;
-            vSpeed = -actor.wallSlideVelocity;
+            speed.y = -actor.wallSlideVelocity;
         }
         if (velocity.y > 0 || (velocity.y < 0 && (!collisions.onSlope || velocity.x == 0))) {
             VerticalCollisions(ref velocity);
         }
-        if (collisions.onSlope) {
+        if (collisions.onSlope && velocity.x != 0) {
             CheckEndSlope(ref velocity);
         }
         Debug.DrawRay(transform.position, velocity * 3f, Color.green);
@@ -137,12 +154,17 @@ public class Controller2D : MonoBehaviour {
         // Checks for ground and ceiling, resets jumps if grounded
         if (collisions.vHit) {
             if (collisions.below) {
-                actor.extraJumps = actor.maxExtraJumps;
+                extraJumps = actor.maxExtraJumps;
+                airDashes = actor.maxAirDashes;
             }
-            vSpeed = 0;
+            speed.y = 0;
         }
-        animator.SetFloat(ANIMATION_H_SPEED, hSpeed);
-        animator.SetFloat(ANIMATION_V_SPEED, vSpeed);
+        animator.SetFloat(ANIMATION_H_SPEED, speed.x);
+        animator.SetFloat(ANIMATION_V_SPEED, speed.y);
+        animator.SetBool(ANIMATION_GROUNDED, collisions.onGround);
+        animator.SetBool(ANIMATION_DASHING, Dashing);
+        animator.SetBool(ANIMATION_WALL, collisions.hHit);
+        animator.SetBool(ANIMATION_FACING, FacingRight);
     }
 
     /// <summary>
@@ -201,7 +223,7 @@ public class Controller2D : MonoBehaviour {
                         collisions.left = directionX < 0;
                         collisions.right = directionX > 0;
                         collisions.hHit = hit;
-                        hSpeed = 0;
+                        speed.x = 0;
                     }
                 }
             }
@@ -233,7 +255,7 @@ public class Controller2D : MonoBehaviour {
                 if (collisions.onSlope && directionY == 1) {
                     velocity.x = velocity.y / Mathf.Tan(collisions.groundAngle * Mathf.Deg2Rad) *
                         Mathf.Sign(velocity.x);
-                    hSpeed = velocity.x / Time.deltaTime;
+                    speed.x = velocity.x / Time.deltaTime;
                 }
                 collisions.above = directionY > 0;
                 collisions.below = directionY < 0;
@@ -248,7 +270,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="direction">-1 to 1; negative values = left; positive values = right</param>
     public void Walk(float direction) {
-        if (CanMove()) {
+        if (CanMove() && dashStaggerTime <= 0) {
             if (direction < 0)
                 FacingRight = false;
             if (direction > 0)
@@ -263,18 +285,22 @@ public class Controller2D : MonoBehaviour {
                 dec = actor.decelerationTime;
             }
             if (acc > 0) {
-                hSpeed += direction * (1 / acc) * actor.maxSpeed * Time.deltaTime;
+                if (Mathf.Abs(speed.x) < actor.maxSpeed) {
+                    speed.x += direction * (1 / acc) * actor.maxSpeed * Time.deltaTime;
+                }
             } else {
-                hSpeed = actor.maxSpeed * direction;
+                speed.x = actor.maxSpeed * direction;
             }
-            if (direction == 0 || Mathf.Sign(direction) != Mathf.Sign(hSpeed)) {
+            if (direction == 0 || Mathf.Sign(direction) != Mathf.Sign(speed.x)) {
                 if (dec > 0) {
-                    hSpeed = Mathf.MoveTowards(hSpeed, 0, (1 / dec) * actor.maxSpeed * Time.deltaTime);
+                    speed.x = Mathf.MoveTowards(speed.x, 0, (1 / dec) * actor.maxSpeed * Time.deltaTime);
                 } else {
-                    hSpeed = 0;
+                    speed.x = 0;
                 }
             }
-            hSpeed = Mathf.Clamp(hSpeed, -actor.maxSpeed, actor.maxSpeed);
+        }
+        if (Mathf.Abs(speed.x) > actor.maxSpeed && !Dashing && dashStaggerTime <= 0) {
+            speed.x = Mathf.Lerp(speed.x, actor.maxSpeed * Mathf.Sign(speed.x), AIR_FRICTION * Time.deltaTime);
         }
     }
 
@@ -290,7 +316,7 @@ public class Controller2D : MonoBehaviour {
                 velocity.y = yVelocity;
                 velocity.x = Mathf.Cos(collisions.groundAngle * Mathf.Deg2Rad) * distance * Mathf.Sign(velocity.x);
                 collisions.below = true;
-                vSpeed = 0;
+                speed.y = 0;
             }
         } else {
             collisions.groundAngle = 0;
@@ -307,7 +333,7 @@ public class Controller2D : MonoBehaviour {
             velocity.x = (Mathf.Cos(collisions.groundAngle * Mathf.Deg2Rad) * distance) * Mathf.Sign(velocity.x);
             velocity.y = -Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad) * distance;
             collisions.below = true;
-            vSpeed = 0;
+            speed.y = 0;
         } else {
             collisions.groundAngle = 0;
         }
@@ -363,18 +389,48 @@ public class Controller2D : MonoBehaviour {
     private void CheckEndSlope(ref Vector2 velocity) {
         float directionX = Mathf.Sign(velocity.x);
         if (velocity.y > 0) {
-            float rayLength = Mathf.Abs(velocity.x) + SKIN_WIDTH;
+            // climb steeper slope
+            float rayLength = Mathf.Abs(velocity.x) + SKIN_WIDTH * 2;
             Vector2 rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) +
                 Vector2.up * velocity.y;
-            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.left * directionX, rayLength, LayerMask.GetMask(GROUND_LAYER));
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX, rayLength, LayerMask.GetMask(GROUND_LAYER));
             if (hit) {
                 float angle = Vector2.Angle(hit.normal, Vector2.up);
                 if (angle != collisions.groundAngle) {
                     velocity.x = (hit.distance - SKIN_WIDTH) * directionX;
                     collisions.groundAngle = angle;
                 }
+                /*
+                } else {          
+                    // climb milder slope or flat ground
+                    rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + velocity;
+                    hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, PLATFORM_LAYER));
+                    if (hit) {
+                        float angle = Vector2.Angle(hit.normal, Vector2.up);
+                        float overshoot = 0;
+                        if (angle < collisions.groundAngle) {
+                            if (angle > 0) {
+                                float sin = Mathf.Sin((angle + collisions.groundAngle) * Mathf.Deg2Rad);
+                                float cos = Mathf.Cos((angle + collisions.groundAngle) * Mathf.Deg2Rad);
+                                float tan = Mathf.Tan(angle * Mathf.Deg2Rad);
+                                float xDistance = cos * hit.distance / ((sin - cos) * tan);
+                                overshoot = xDistance / cos;
+                            } else {
+                                overshoot = hit.distance / Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad);
+                            }
+                            overshoot -= SKIN_WIDTH * 2;
+                            if (overshoot > MIN_OVERSHOOT_ADJUST && overshoot < 1f) {
+                                print(overshoot + "");
+                                float adjustMagnitude = (velocity.magnitude - overshoot) / velocity.magnitude;
+                                velocity *= adjustMagnitude;
+                                velocity.x += 0.1f * Mathf.Sign(velocity.x);
+                            }
+                        }
+                    }
+                    */
             }
         } else {
+            // descend milder slope or flat ground
             float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
             Vector2 rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) +
                 Vector2.left * velocity.x;
@@ -393,22 +449,55 @@ public class Controller2D : MonoBehaviour {
     ///  Makes the actor jump if possible
     /// </summary>
     public void Jump() {
-        if (CanMove()) {
-            if (collisions.below || actor.extraJumps > 0 || (actor.canWallJump && collisions.hHit)) {
-                vSpeed = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * actor.jumpHeight);
+        if (CanMove() && (!Dashing || actor.canJumpDuringDash)) {
+            if (collisions.below || extraJumps > 0 || (actor.canWallJump && collisions.hHit)) {
+                speed.y = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * actor.jumpHeight);
                 animator.SetTrigger(ANIMATION_JUMP);
+                if (actor.jumpCancelStagger) {
+                    dashStaggerTime = 0;
+                }
                 // wall jump
                 if (actor.canWallJump && collisions.hHit && !collisions.below && !collisions.onSlope) {
-                    hSpeed = collisions.left ? actor.wallJumpVelocity : -actor.wallJumpVelocity;
-                    actor.extraJumps = actor.maxExtraJumps;
+                    speed.x = collisions.left ? actor.wallJumpVelocity : -actor.wallJumpVelocity;
+                    extraJumps = actor.maxExtraJumps;
+                    airDashes = actor.maxAirDashes;
                 } else {
                     // air jump
                     if (!collisions.below)
-                        actor.extraJumps--;
+                        extraJumps--;
                 }
                 RestorePlatformCollisions();
             }
         }
+    }
+
+    public void Dash(Vector2 direction) {
+        if (CanMove() && actor.canDash && dashCooldown <= 0) {
+            if (!collisions.onGround) {
+                if (airDashes > 0) {
+                    airDashes--;
+                } else {
+                    return;
+                }
+            }
+            Dashing = true;
+            if (direction.magnitude == 0 || (collisions.onGround && direction.y < 0)) {
+                direction = FacingRight ? Vector2.right : Vector2.left;
+            }
+            if (!actor.omnidirectionalDash) {
+                direction = Vector2.right * Mathf.Sign(direction.x);
+            }
+            direction = direction.normalized * actor.dashSpeed;
+            speed.x = direction.x;
+            speed.y = direction.y;
+            dashCooldown = actor.maxDashCooldown;
+            dashStaggerTime = actor.dashStagger;
+            Invoke("StopDash", actor.dashDistance / actor.dashSpeed);
+        }
+    }
+
+    private void StopDash() {
+        Dashing = false;
     }
 
     /// <summary>
@@ -446,15 +535,25 @@ public class Controller2D : MonoBehaviour {
     /// <summary>
     /// Handles knockback force and movement
     /// </summary>
-    public void HandleKnockback() {
+    private void HandleKnockback() {
         if (KnockedBack) {
-            float directionX = Mathf.Sign(hSpeed);
-            float newHSpeed = Mathf.Abs(hSpeed) - (KNOCK_BACK_REDUCTION * Time.deltaTime);
+            float directionX = Mathf.Sign(speed.x);
+            float newHSpeed = Mathf.Abs(speed.x) - (AIR_FRICTION * Time.deltaTime);
             if (newHSpeed <= 0) {
                 newHSpeed = 0;
                 KnockedBack = false;
             }
-            hSpeed = newHSpeed * directionX;
+            speed.x = newHSpeed * directionX;
+        }
+    }
+
+    private void HandleDash() {
+        if (dashCooldown > 0) {
+            dashCooldown -= Time.deltaTime;
+        }
+        if (dashStaggerTime > 0 && !Dashing) {
+            dashStaggerTime -= Time.deltaTime;
+            speed *= Mathf.Max(1 - actor.staggerSpeedFalloff * Time.deltaTime, 0);
         }
     }
 

@@ -6,7 +6,7 @@ There are some different of ways of implementing character movement and controls
 
 ![Demo Gif](https://github.com/akashenen/2d-platformer-controller/blob/master/Gifs/demo.gif)
 
-#### Features
+### Features
 
 * Smooth and precise movement
 * Allows for multiple jumps
@@ -14,10 +14,10 @@ There are some different of ways of implementing character movement and controls
 * Jump-through platforms
 * Wall jumping and sliding
 * Slopes
-  
-#### Planned Features
-
 * Dashing and air dashing
+  
+### Planned Features
+
 * Ladders/Ropes
 * Moving platforms
 * Ledge grabs
@@ -30,22 +30,43 @@ To use this project you need Unity 2017.1 or higher.
 
 The main classes used in this project are the [Actor](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Actor.cs), used mainly for attributes and other adjustable values, and the [Controller2D](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Controller2D.cs), which handles all the movement and collision algorithms.
 
-#### Movement values
+### Movement values
+
+#### Horizontal Control
 
 * **maxSpeed:** The maximum horizontal speed the actor can reach
 * **accelerationTime:** How much time (in seconds) an actor will take to reach maximum horizontal speed. A value of 0 will allow the actor to reach maximum speed instantly.
 * **decelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed. A value of 0 will allow the actor to stop instantly.
+
+#### Air Control
+
 * **maxExtraJumps:** How many times an actor can jump again without touching the ground.
-* **extraJumps:** How many extra jumps the actor has currently.
 * **jumpHeight:** How high (in units) the actor can jump.
 * **jumpHoldScale:** How much the actor is affected by gravity while the jump button is held. This affects not only jump height but also falling speed while holding the button. A value of 1 will make holding the button have no effect.
 * **advancedAirControl:** If enabled, will allow you to set values for acceleration and deceleration while in the air, making it possible to have more stiff (or otherwise) controls while airborne. If disabled, will use the default acceleration and deceleration times for air control.
 * **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps.
 * **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground.
+
+#### Wall Sliding and Jumping
+
 * **canWallSlide:** If enabled, the actor will be able to slide down walls
 * **wallSlideVelocity:** Speed in which the actor will slide down walls if sliding is enabled
 * **canWallJump:** If enabled, the actor will be able to jump from walls
 * **wallJumpVelocity:** Horizonal velocity added to the actor when jumping from walls
+
+#### Dashing
+
+* **canDash:** If enabled, the actor will be able to dash
+* **omnidirectionalDash:** If enabled, the actor will be able to dash in any direction, otherwise only horizontal dashes are allowed
+* **dashDownSlopes:** If enabled, the actor will dash down slopes (like in Mega Man X games), otherwise it will maintain it's height when encountering a down slope
+* **canJumpDuringDash:** If enabled, the actor will be able to jump during of the dash
+* **jumpCancelStagger:** If enabled, jumping will cancel the stagger time after the dash, allowing it to keep the momentum
+* **dashDistance:** Maximum distance traveled during the dash
+* **dashSpeed:** The speed in which the actor dashes
+* **dashStagger:** Duration of the stagger the actor suffers after dashing, a value of 0 will make dashes have no stagger and keep all momentum
+* **staggerSpeedFalloff:** How much friction the actor will have during the stagger, causing it to lose speed (tweek this value along with dashStagger to make dashes feel good)
+* **maxDashCooldown:** Time before the actor can dash again after dashing
+* **maxAirDashes:** How many times the actor can dash while in the air, a value of 0 will make the actor unable to air dash
 
 ## Authors
 
