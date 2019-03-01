@@ -1596,42 +1596,7 @@ PrefabInstance:
     - target: {fileID: 41342835647678603, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
         type: 3}
       propertyPath: dashDownSlopes
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 41342835647678603, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: omnidirectionalDash
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 41342835647678603, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: dashDuration
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 41342835647678603, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: dashDistance
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 41342835647678603, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: dashSpeed
-      value: 15
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001131491305721336, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001131491305721336, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001131491305721336, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4fb49a1922deb8249bfdbba50d98dbf1, type: 3}

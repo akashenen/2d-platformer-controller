@@ -37,6 +37,7 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 * **maxSpeed:** The maximum horizontal speed the actor can reach
 * **accelerationTime:** How much time (in seconds) an actor will take to reach maximum horizontal speed. A value of 0 will allow the actor to reach maximum speed instantly.
 * **decelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed. A value of 0 will allow the actor to stop instantly.
+* **canUseSlopes:** If your game doesn't have slopes, you can disable this option so the actor never checks or adjusts for slopes, saving some performance
 
 #### Air Control
 

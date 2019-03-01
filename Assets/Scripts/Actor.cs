@@ -14,6 +14,7 @@ public class Actor : MonoBehaviour {
     public float maxSpeed;
     public float accelerationTime;
     public float decelerationTime;
+    public bool canUseSlopes;
     [Header("Air Control")]
     public int maxExtraJumps;
     public float jumpHeight;

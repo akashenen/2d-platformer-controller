@@ -108,6 +108,7 @@ MonoBehaviour:
   maxSpeed: 8
   accelerationTime: 0.3
   decelerationTime: 0.3
+  canUseSlopes: 1
   maxExtraJumps: 1
   jumpHeight: 2
   jumpHoldScale: 0.6
