@@ -15,14 +15,16 @@ There are some different of ways of implementing character movement and controls
 * Wall jumping and sliding
 * Slopes
 * Dashing and air dashing
+* Ladders/Ropes
   
 ### Planned Features
 
-* Ladders/Ropes
 * Moving platforms
 * Ledge grabs
 * Running
 * Ducking/Crawling
+* Crumbling platforms
+* Jump pads
 
 ## Getting Started
 
@@ -32,21 +34,21 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 
 ### Movement values
 
-#### Horizontal Control
+#### Movement
 
 * **maxSpeed:** The maximum horizontal speed the actor can reach
-* **accelerationTime:** How much time (in seconds) an actor will take to reach maximum horizontal speed. A value of 0 will allow the actor to reach maximum speed instantly.
-* **decelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed. A value of 0 will allow the actor to stop instantly.
+* **accelerationTime:** How much time (in seconds) an actor will take to reach maximum horizontal speed. A value of 0 will allow the actor to reach maximum speed instantly
+* **decelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed. A value of 0 will allow the actor to stop instantly
 * **canUseSlopes:** If your game doesn't have slopes, you can disable this option so the actor never checks or adjusts for slopes, saving some performance
 
-#### Air Control
+#### Jumping
 
-* **maxExtraJumps:** How many times an actor can jump again without touching the ground.
+* **maxExtraJumps:** How many times an actor can jump again without touching the ground
 * **jumpHeight:** How high (in units) the actor can jump.
-* **jumpHoldScale:** How much the actor is affected by gravity while the jump button is held. This affects not only jump height but also falling speed while holding the button. A value of 1 will make holding the button have no effect.
-* **advancedAirControl:** If enabled, will allow you to set values for acceleration and deceleration while in the air, making it possible to have more stiff (or otherwise) controls while airborne. If disabled, will use the default acceleration and deceleration times for air control.
-* **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps.
-* **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground.
+* **jumpHoldScale:** How much the actor is affected by gravity while the jump button is held. This affects not only jump height but also falling speed while holding the button. A value of 1 will make holding the button have no effect
+* **advancedAirControl:** If enabled, will allow you to set values for acceleration and deceleration while in the air, making it possible to have more stiff (or otherwise) controls while airborne. If disabled, will use the default acceleration and deceleration times for air control
+* **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps
+* **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground
 
 #### Wall Sliding and Jumping
 
@@ -68,6 +70,14 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 * **staggerSpeedFalloff:** How much friction the actor will have during the stagger, causing it to lose speed (tweek this value along with dashStagger to make dashes feel good)
 * **maxDashCooldown:** Time before the actor can dash again after dashing
 * **maxAirDashes:** How many times the actor can dash while in the air, a value of 0 will make the actor unable to air dash
+
+#### Ladders
+
+* **ladderSpeed:** How fast the actor can move up and down slopes
+* **ladderAccelerationTime:** How much time (in seconds) an actor will take to reach maximum speed on ladders. A value of 0 will allow the actor to reach maximum speed instantly
+* **ladderDecelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed on ladders. A value of 0 will allow the actor to stop instantly
+* **ladderJumpHeight:** How high (in units) the actor can jump when holding a ladder
+* **ladderJumpVelocity:** Horizonal velocity added to the actor when jumping from ladders
 
 ## Authors
 

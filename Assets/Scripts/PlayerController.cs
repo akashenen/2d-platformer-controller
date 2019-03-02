@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour {
     void Update() {
         Vector2 axis = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         controller2D.Walk(axis.x);
+        controller2D.ClimbLadder(axis.y);
         if (Input.GetButtonDown("Jump")) {
             if (axis.y < 0) {
                 controller2D.JumpDown();

@@ -10,12 +10,12 @@ using UnityEngine;
 public class Actor : MonoBehaviour {
 
     // Actor's base stats
-    [Header("Horizontal Control")]
+    [Header("Movement")]
     public float maxSpeed;
     public float accelerationTime;
     public float decelerationTime;
     public bool canUseSlopes;
-    [Header("Air Control")]
+    [Header("Jumping")]
     public int maxExtraJumps;
     public float jumpHeight;
     public float jumpHoldScale;
@@ -39,4 +39,10 @@ public class Actor : MonoBehaviour {
     public float staggerSpeedFalloff;
     public float maxDashCooldown;
     public int maxAirDashes;
+    [Header("Ladders")]
+    public float ladderSpeed;
+    public float ladderAccelerationTime;
+    public float ladderDecelerationTime;
+    public float ladderJumpHeight;
+    public float ladderJumpVelocity;
 }

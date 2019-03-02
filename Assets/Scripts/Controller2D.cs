@@ -12,6 +12,7 @@ public class Controller2D : MonoBehaviour {
     // Info that can be used in other classes
     public static readonly string GROUND_LAYER = "Ground";
     public static readonly string PLATFORM_LAYER = "Platform";
+    public static readonly string LADDER_LAYER = "Ladder";
     public static readonly string PLAYER_LAYER = "Player";
     public static readonly string ENEMY_LAYER = "Enemy";
     public static readonly float GRAVITY = -50f;
@@ -21,6 +22,8 @@ public class Controller2D : MonoBehaviour {
     private static readonly float RAY_COUNT = 4;
     public static readonly float SKIN_WIDTH = 0.015f;
     public static readonly float FALLTHROUGH_DELAY = 0.2f;
+    public static readonly float LADDER_CLIMB_THRESHOLD = 0.3f;
+    public static readonly float LADDER_DELAY = 0.3f;
     public static readonly float MAX_CLIMB_ANGLE = 60f;
     // Animation attributes and names
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
@@ -30,6 +33,7 @@ public class Controller2D : MonoBehaviour {
     private static readonly string ANIMATION_DASHING = "dashing";
     private static readonly string ANIMATION_WALL = "onWall";
     private static readonly string ANIMATION_FACING = "facingRight";
+    private static readonly string ANIMATION_LADDER = "onLadder";
 
     // Other Componenents
     private Actor actor;
@@ -43,11 +47,13 @@ public class Controller2D : MonoBehaviour {
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
     private float gravityScale = 1;
-    private bool ignorePlatformCollisions = false;
+    private float ignorePlatforms = 0;
+    private float ignoreLadders = 0;
     private int extraJumps = 0;
     private int airDashes = 0;
     private float dashCooldown = 0;
     private float dashStaggerTime = 0;
+    private float ladderX = 0;
 
     // Public propoerties
     public bool FacingRight { get; set; } // false == left, true == right
@@ -65,14 +71,19 @@ public class Controller2D : MonoBehaviour {
         animator = GetComponent<Animator>();
         KnockedBack = false;
         OnLadder = false;
+        Dashing = false;
         CalculateSpacing();
     }
 
-    // Update is called once per frame
+    /// <summary>
+    /// Update is called once pre frame
+    /// </summary>
     void Update() {
-        HandleDash();
-        HandleKnockback();
+        UpdateTimers();
+        UpdateDash();
+        UpdateKnockback();
         Move();
+        SetAnimations();
     }
 
     /// <summary>
@@ -108,7 +119,7 @@ public class Controller2D : MonoBehaviour {
     public void Move() {
         UpdateRaycastOrigins();
         collisions.Reset();
-        if (!Dashing && dashStaggerTime <= 0) {
+        if (!OnLadder && !Dashing && dashStaggerTime <= 0) {
             speed.y += GRAVITY * gravityScale * Time.deltaTime;
         }
         Vector2 velocity = new Vector2(speed.x * Time.deltaTime, speed.y * Time.deltaTime);
@@ -144,28 +155,34 @@ public class Controller2D : MonoBehaviour {
         // Checks for ground and ceiling, resets jumps if grounded
         if (collisions.vHit) {
             if (collisions.below) {
-                extraJumps = actor.maxExtraJumps;
-                airDashes = actor.maxAirDashes;
+                ResetJumpsAndDashes();
             }
             speed.y = 0;
         }
+    }
+
+    /// <summary>
+    /// Updates the actor's animator with the movement and collision values
+    /// </summary>
+    private void SetAnimations() {
         animator.SetFloat(ANIMATION_H_SPEED, speed.x);
         animator.SetFloat(ANIMATION_V_SPEED, speed.y);
         animator.SetBool(ANIMATION_GROUNDED, collisions.onGround);
         animator.SetBool(ANIMATION_DASHING, Dashing);
         animator.SetBool(ANIMATION_WALL, collisions.hHit);
         animator.SetBool(ANIMATION_FACING, FacingRight);
+        animator.SetBool(ANIMATION_LADDER, OnLadder);
     }
 
     /// <summary>
     /// Checks if actor is touching the ground, used to adjust to slopes
     /// </summary>
-    /// <param name="dir">Direction the actor is moving, -1 = left, 1 = right</param>
-    private void CheckGround(float dir) {
-        Vector2 rayOrigin = dir == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
+    /// <param name="direction">Direction the actor is moving, -1 = left, 1 = right</param>
+    private void CheckGround(float direction) {
+        Vector2 rayOrigin = direction == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
         rayOrigin.y += SKIN_WIDTH * 2;
         for (int i = 0; i < RAY_COUNT; i++) {
-            rayOrigin += (dir == 1 ? Vector2.right : Vector2.left) * (verticalRaySpacing * i);
+            rayOrigin += (direction == 1 ? Vector2.right : Vector2.left) * (verticalRaySpacing * i);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down,
                 SKIN_WIDTH * 4f, LayerMask.GetMask(GROUND_LAYER, PLATFORM_LAYER));
             if (hit) {
@@ -230,6 +247,18 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="velocity">The current object velocity used for the raycast lenght</param>
     private void VerticalCollisions(ref Vector2 velocity) {
+        if (OnLadder) {
+            Vector2 origin = myCollider.bounds.center + Vector3.up *
+                (myCollider.bounds.extents.y * Mathf.Sign(velocity.y) + velocity.y);
+            Collider2D hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+            if (!hit) {
+                return;
+            }
+            hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(LADDER_LAYER));
+            if (hit) {
+                return;
+            }
+        }
         float directionY = Mathf.Sign(velocity.y);
         float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
         for (int i = 0; i < RAY_COUNT; i++) {
@@ -239,13 +268,17 @@ public class Controller2D : MonoBehaviour {
                 rayLength, LayerMask.GetMask(GROUND_LAYER));
             Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength, Color.red);
             // for jump-through platforms
-            if (!ignorePlatformCollisions && directionY < 0 && !hit) {
+            if (ignorePlatforms <= 0 && directionY < 0 && !hit) {
                 hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
                     rayLength, LayerMask.GetMask(PLATFORM_LAYER));
             }
             if (hit) {
                 velocity.y = (hit.distance - SKIN_WIDTH) * directionY;
                 rayLength = hit.distance;
+                if (OnLadder && directionY < 0) {
+                    OnLadder = false;
+                    IgnoreLadders();
+                }
                 if (collisions.onSlope && directionY == 1) {
                     velocity.x = velocity.y / Mathf.Tan(collisions.groundAngle * Mathf.Deg2Rad) *
                         Mathf.Sign(velocity.x);
@@ -264,11 +297,14 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="direction">-1 to 1; negative values = left; positive values = right</param>
     public void Walk(float direction) {
-        if (CanMove() && dashStaggerTime <= 0) {
+        if (CanMove() && !Dashing && dashStaggerTime <= 0) {
             if (direction < 0)
                 FacingRight = false;
             if (direction > 0)
                 FacingRight = true;
+            if (OnLadder) {
+                return;
+            }
             float acc = 0f;
             float dec = 0f;
             if (actor.advancedAirControl && !collisions.below) {
@@ -425,7 +461,28 @@ public class Controller2D : MonoBehaviour {
     public void Jump() {
         if (CanMove() && (!Dashing || actor.canJumpDuringDash)) {
             if (collisions.below || extraJumps > 0 || (actor.canWallJump && collisions.hHit)) {
-                speed.y = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * actor.jumpHeight);
+                // air jump
+                if (!collisions.below && !OnLadder)
+                    extraJumps--;
+                float height = actor.jumpHeight;
+                if (OnLadder) {
+                    Vector2 origin = myCollider.bounds.center + Vector3.up * myCollider.bounds.extents.y;
+                    Collider2D hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                    if (hit) {
+                        return;
+                    }
+                    origin = myCollider.bounds.center + Vector3.down * myCollider.bounds.extents.y;
+                    hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                    if (hit) {
+                        return;
+                    }
+                    height = actor.ladderJumpHeight;
+                    speed.x = actor.ladderJumpVelocity * (FacingRight ? 1 : -1);
+                    OnLadder = false;
+                    IgnoreLadders();
+                    ResetJumpsAndDashes();
+                }
+                speed.y = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * height);
                 animator.SetTrigger(ANIMATION_JUMP);
                 if (actor.jumpCancelStagger) {
                     dashStaggerTime = 0;
@@ -433,20 +490,33 @@ public class Controller2D : MonoBehaviour {
                 // wall jump
                 if (actor.canWallJump && collisions.hHit && !collisions.below && !collisions.onSlope) {
                     speed.x = collisions.left ? actor.wallJumpVelocity : -actor.wallJumpVelocity;
-                    extraJumps = actor.maxExtraJumps;
-                    airDashes = actor.maxAirDashes;
-                } else {
-                    // air jump
-                    if (!collisions.below)
-                        extraJumps--;
+                    ResetJumpsAndDashes();
                 }
-                RestorePlatformCollisions();
+                ignorePlatforms = 0;
             }
         }
     }
 
+    /// <summary>
+    /// Makes the actor dash in the specified direction if possible.
+    /// If omnidirectional dash is disabled, will only dash in the horizontal axis
+    /// </summary>
+    /// <param name="direction">The desired direction of the dash</param>
     public void Dash(Vector2 direction) {
         if (CanMove() && actor.canDash && dashCooldown <= 0) {
+            if (OnLadder) {
+                Vector2 origin = myCollider.bounds.center + Vector3.up * myCollider.bounds.extents.y;
+                Collider2D hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                if (hit) {
+                    return;
+                }
+                origin = myCollider.bounds.center + Vector3.down * myCollider.bounds.extents.y;
+                hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                if (hit) {
+                    return;
+                }
+                OnLadder = false;
+            }
             if (!collisions.onGround) {
                 if (airDashes > 0) {
                     airDashes--;
@@ -458,8 +528,10 @@ public class Controller2D : MonoBehaviour {
             if (direction.magnitude == 0 || (collisions.onGround && direction.y < 0)) {
                 direction = FacingRight ? Vector2.right : Vector2.left;
             }
+            // wall dash
             if (collisions.hHit) {
                 direction = FacingRight ? Vector2.left : Vector2.right;
+                ResetJumpsAndDashes();
             }
             if (!actor.omnidirectionalDash) {
                 direction = Vector2.right * Mathf.Sign(direction.x);
@@ -473,6 +545,9 @@ public class Controller2D : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Stops the dash after its duration has passed
+    /// </summary>
     private void StopDash() {
         Dashing = false;
     }
@@ -485,8 +560,7 @@ public class Controller2D : MonoBehaviour {
         if (CanMove()) {
             if (collisions.vHit &&
                 collisions.vHit.collider.gameObject.layer == LayerMask.NameToLayer(PLATFORM_LAYER)) {
-                ignorePlatformCollisions = true;
-                Invoke("RestorePlatformCollisions", FALLTHROUGH_DELAY);
+                IgnorePlatforms();
             } else {
                 Jump();
             }
@@ -494,11 +568,84 @@ public class Controller2D : MonoBehaviour {
     }
 
     /// <summary>
-    /// Restores plaftorm collisions after the set amount of time has passed
-    /// or the actor has jumped
+    /// The actor will briefly ignore platforms so it can jump down through them
     /// </summary>
-    private void RestorePlatformCollisions() {
-        ignorePlatformCollisions = false;
+    private void IgnorePlatforms() {
+        ignorePlatforms = FALLTHROUGH_DELAY;
+    }
+
+    /// <summary>
+    /// The actor will briefly ignore ladders so it can jump or dash off of them
+    /// </summary>
+    private void IgnoreLadders() {
+        ignoreLadders = LADDER_DELAY;
+    }
+
+    /// <summary>
+    /// Gives the actor its maximum extra jumps and air dashes
+    /// </summary>
+    private void ResetJumpsAndDashes() {
+        extraJumps = actor.maxExtraJumps;
+        airDashes = actor.maxAirDashes;
+    }
+
+    /// <summary>
+    /// If not already climbing a ladder, tries to find one and attach t it
+    /// </summary>
+    /// <param name="direction"></param>
+    public void ClimbLadder(float direction) {
+        if (ignoreLadders > 0 || Dashing) {
+            return;
+        }
+        float radius = myCollider.bounds.extents.x;
+        Vector2 topOrigin = ((Vector2) myCollider.bounds.center) + Vector2.up * (myCollider.bounds.extents.y - radius);
+        Vector2 bottomOrigin = ((Vector2) myCollider.bounds.center) + Vector2.down *
+            (myCollider.bounds.extents.y + radius + SKIN_WIDTH);
+        if (!OnLadder && direction != 0 && Mathf.Abs(direction) > LADDER_CLIMB_THRESHOLD) {
+            Collider2D hit = Physics2D.OverlapCircle(direction == -1 ? bottomOrigin : topOrigin,
+                radius, LayerMask.GetMask(LADDER_LAYER));
+            if (hit) {
+                OnLadder = true;
+                speed.x = 0;
+                ladderX = hit.transform.position.x;
+            }
+        }
+        if (OnLadder) {
+            float newX = Mathf.MoveTowards(transform.position.x, ladderX, 5f * Time.deltaTime);
+            transform.Translate(newX - transform.position.x, 0, 0);
+            ResetJumpsAndDashes();
+            if (actor.ladderAccelerationTime > 0) {
+                if (Mathf.Abs(speed.y) < actor.ladderSpeed) {
+                    speed.y += direction * (1 / actor.ladderAccelerationTime) * actor.ladderSpeed * Time.deltaTime;
+                }
+            } else {
+                speed.y = actor.ladderSpeed * direction;
+            }
+            if (direction == 0 || Mathf.Sign(direction) != Mathf.Sign(speed.y)) {
+                if (actor.ladderDecelerationTime > 0) {
+                    speed.y = Mathf.MoveTowards(speed.x, 0, (1 / actor.ladderDecelerationTime) *
+                        actor.ladderSpeed * Time.deltaTime);
+                } else {
+                    speed.y = 0;
+                }
+            }
+            if (Mathf.Abs(speed.y) > actor.ladderSpeed) {
+                speed.y = Mathf.Min(speed.y, actor.ladderSpeed);
+            }
+            // checks ladder end
+            Collider2D hit = Physics2D.OverlapCircle(topOrigin + Vector2.up * (speed.y * Time.deltaTime + radius),
+                0, LayerMask.GetMask(LADDER_LAYER));
+            if (!hit) {
+                hit = Physics2D.OverlapCircle(bottomOrigin + Vector2.up * (speed.y * Time.deltaTime + radius),
+                    0, LayerMask.GetMask(LADDER_LAYER));
+                if (!hit) {
+                    OnLadder = false;
+                    if (speed.y > 0) {
+                        speed.y = 0;
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -512,7 +659,7 @@ public class Controller2D : MonoBehaviour {
     /// <summary>
     /// Handles knockback force and movement
     /// </summary>
-    private void HandleKnockback() {
+    private void UpdateKnockback() {
         if (KnockedBack) {
             float directionX = Mathf.Sign(speed.x);
             float newHSpeed = Mathf.Abs(speed.x) - (AIR_FRICTION * Time.deltaTime);
@@ -524,7 +671,10 @@ public class Controller2D : MonoBehaviour {
         }
     }
 
-    private void HandleDash() {
+    /// <summary>
+    /// Updates dash related values
+    /// </summary>
+    private void UpdateDash() {
         if (dashCooldown > 0) {
             dashCooldown -= Time.deltaTime;
         }
@@ -535,7 +685,20 @@ public class Controller2D : MonoBehaviour {
     }
 
     /// <summary>
-    /// Checks if there are any knockbacks or status that stop movement
+    /// Updates timers for different features
+    /// </summary>
+    private void UpdateTimers() {
+        if (ignorePlatforms > 0) {
+            ignorePlatforms -= Time.deltaTime;
+        }
+        if (ignoreLadders > 0) {
+            ignoreLadders -= Time.deltaTime;
+        }
+    }
+
+    /// <summary>
+    /// Checks if there are any knockbacks or status that stop all forms of movement,
+    /// including jumping and dashing
     /// </summary>
     /// <returns>Whether the actor can move or not</returns>
     public bool CanMove() {
