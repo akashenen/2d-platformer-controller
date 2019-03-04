@@ -11,7 +11,7 @@ using UnityEngine;
 public class Controller2D : MonoBehaviour {
     // Info that can be used in other classes
     public static readonly string GROUND_LAYER = "Ground";
-    public static readonly string PLATFORM_LAYER = "Platform";
+    public static readonly string OW_PLATFORM_LAYER = "OWPlatform";
     public static readonly string LADDER_LAYER = "Ladder";
     public static readonly string PLAYER_LAYER = "Player";
     public static readonly string ENEMY_LAYER = "Enemy";
@@ -43,7 +43,10 @@ public class Controller2D : MonoBehaviour {
     // Physics properties
     private RaycastOrigins raycastOrigins;
     private CollisionInfo collisions;
-    private Vector2 speed = new Vector2();
+    [SerializeField]
+    private Vector2 speed = Vector2.zero;
+    [SerializeField]
+    private Vector2 externalForce = Vector2.zero;
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
     private float gravityScale = 1;
@@ -82,7 +85,10 @@ public class Controller2D : MonoBehaviour {
         UpdateTimers();
         UpdateDash();
         UpdateKnockback();
-        Move();
+        UpdateExternalForce();
+        UpdateGravity();
+        collisions.Reset();
+        Move((speed + externalForce) * Time.deltaTime);
         SetAnimations();
     }
 
@@ -116,13 +122,8 @@ public class Controller2D : MonoBehaviour {
     /// <summary>
     /// Tries to move according to current speed and checking for collisions
     /// </summary>
-    public void Move() {
+    public void Move(Vector2 velocity) {
         UpdateRaycastOrigins();
-        collisions.Reset();
-        if (!OnLadder && !Dashing && dashStaggerTime <= 0) {
-            speed.y += GRAVITY * gravityScale * Time.deltaTime;
-        }
-        Vector2 velocity = new Vector2(speed.x * Time.deltaTime, speed.y * Time.deltaTime);
         float xDir = Mathf.Sign(velocity.x);
         CheckGround(xDir);
         if (velocity.x != 0) {
@@ -140,10 +141,6 @@ public class Controller2D : MonoBehaviour {
             }
             HorizontalCollisions(ref velocity);
         }
-        if (collisions.hHit && actor.canWallSlide && velocity.y < 0) {
-            velocity.y = -actor.wallSlideVelocity * Time.deltaTime;
-            speed.y = -actor.wallSlideVelocity;
-        }
         if (velocity.y > 0 || (velocity.y < 0 && (!collisions.onSlope || velocity.x == 0))) {
             VerticalCollisions(ref velocity);
         }
@@ -158,6 +155,44 @@ public class Controller2D : MonoBehaviour {
                 ResetJumpsAndDashes();
             }
             speed.y = 0;
+            externalForce.y = 0;
+        }
+    }
+
+    /// <summary>
+    /// Updates the actor's vertical speed according to gravity, gravity scale and other properties
+    /// </summary>
+    private void UpdateGravity() {
+        if (!OnLadder && !Dashing && dashStaggerTime <= 0) {
+            speed.y += GRAVITY * gravityScale * Time.deltaTime;
+        }
+        if (collisions.hHit && actor.canWallSlide && speed.y < 0) {
+            speed.y = -actor.wallSlideVelocity;
+        }
+    }
+
+    /// <summary>
+    /// Adds the specified force to the actor's total external force
+    /// </summary>
+    /// <param name="force">Force to be added</param>
+    public void ApplyForce(Vector2 force) {
+        externalForce += force;
+    }
+
+    /// <summary>
+    /// Sets the actor's external force to the specified amount
+    /// </summary>
+    /// <param name="force">Force to be set</param>
+    public void SetForce(Vector2 force) {
+        externalForce = force;
+    }
+
+    /// <summary>
+    /// Reduces the external force over time according to the air or ground frictions
+    /// </summary>
+    private void UpdateExternalForce() {
+        if (!Dashing && dashStaggerTime <= 0) {
+            externalForce = Vector2.MoveTowards(externalForce, Vector2.zero, AIR_FRICTION * Time.deltaTime);
         }
     }
 
@@ -165,8 +200,8 @@ public class Controller2D : MonoBehaviour {
     /// Updates the actor's animator with the movement and collision values
     /// </summary>
     private void SetAnimations() {
-        animator.SetFloat(ANIMATION_H_SPEED, speed.x);
-        animator.SetFloat(ANIMATION_V_SPEED, speed.y);
+        animator.SetFloat(ANIMATION_H_SPEED, speed.x + externalForce.x);
+        animator.SetFloat(ANIMATION_V_SPEED, speed.y + externalForce.y);
         animator.SetBool(ANIMATION_GROUNDED, collisions.onGround);
         animator.SetBool(ANIMATION_DASHING, Dashing);
         animator.SetBool(ANIMATION_WALL, collisions.hHit);
@@ -184,7 +219,7 @@ public class Controller2D : MonoBehaviour {
         for (int i = 0; i < RAY_COUNT; i++) {
             rayOrigin += (direction == 1 ? Vector2.right : Vector2.left) * (verticalRaySpacing * i);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down,
-                SKIN_WIDTH * 4f, LayerMask.GetMask(GROUND_LAYER, PLATFORM_LAYER));
+                SKIN_WIDTH * 4f, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
             if (hit) {
                 collisions.onGround = true;
                 collisions.groundAngle = Vector2.Angle(hit.normal, Vector2.up);
@@ -235,6 +270,7 @@ public class Controller2D : MonoBehaviour {
                         collisions.right = directionX > 0;
                         collisions.hHit = hit;
                         speed.x = 0;
+                        externalForce.x = 0;
                     }
                 }
             }
@@ -267,10 +303,10 @@ public class Controller2D : MonoBehaviour {
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
                 rayLength, LayerMask.GetMask(GROUND_LAYER));
             Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength, Color.red);
-            // for jump-through platforms
+            // for one way platforms
             if (ignorePlatforms <= 0 && directionY < 0 && !hit) {
                 hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
-                    rayLength, LayerMask.GetMask(PLATFORM_LAYER));
+                    rayLength, LayerMask.GetMask(OW_PLATFORM_LAYER));
             }
             if (hit) {
                 velocity.y = (hit.distance - SKIN_WIDTH) * directionY;
@@ -282,7 +318,8 @@ public class Controller2D : MonoBehaviour {
                 if (collisions.onSlope && directionY == 1) {
                     velocity.x = velocity.y / Mathf.Tan(collisions.groundAngle * Mathf.Deg2Rad) *
                         Mathf.Sign(velocity.x);
-                    speed.x = velocity.x / Time.deltaTime;
+                    speed.x = 0;
+                    externalForce.x = 0;
                 }
                 collisions.above = directionY > 0;
                 collisions.below = directionY < 0;
@@ -317,6 +354,7 @@ public class Controller2D : MonoBehaviour {
             if (acc > 0) {
                 if (Mathf.Abs(speed.x) < actor.maxSpeed) {
                     speed.x += direction * (1 / acc) * actor.maxSpeed * Time.deltaTime;
+                    speed.x = Mathf.Min(Mathf.Abs(speed.x), actor.maxSpeed) * Mathf.Sign(speed.x);
                 }
             } else {
                 speed.x = actor.maxSpeed * direction;
@@ -328,9 +366,6 @@ public class Controller2D : MonoBehaviour {
                     speed.x = 0;
                 }
             }
-        }
-        if (Mathf.Abs(speed.x) > actor.maxSpeed && !Dashing && dashStaggerTime <= 0) {
-            speed.x = Mathf.Lerp(speed.x, actor.maxSpeed * Mathf.Sign(speed.x), AIR_FRICTION * Time.deltaTime);
         }
     }
 
@@ -347,6 +382,7 @@ public class Controller2D : MonoBehaviour {
                 velocity.x = Mathf.Cos(collisions.groundAngle * Mathf.Deg2Rad) * distance * Mathf.Sign(velocity.x);
                 collisions.below = true;
                 speed.y = 0;
+                externalForce.y = 0;
             }
         } else {
             collisions.groundAngle = 0;
@@ -364,6 +400,7 @@ public class Controller2D : MonoBehaviour {
             velocity.y = -Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad) * distance;
             collisions.below = true;
             speed.y = 0;
+            externalForce.y = 0;
         } else {
             collisions.groundAngle = 0;
         }
@@ -391,7 +428,7 @@ public class Controller2D : MonoBehaviour {
             } else {
                 // climb milder slope or flat ground
                 rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + velocity;
-                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, PLATFORM_LAYER));
+                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
                 Debug.DrawRay(rayOrigin, Vector2.down, Color.yellow);
                 if (hit) {
                     float angle = Vector2.Angle(hit.normal, Vector2.up);
@@ -419,7 +456,7 @@ public class Controller2D : MonoBehaviour {
             float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
             Vector2 rayOrigin = (directionX == -1 ? raycastOrigins.bottomRight : raycastOrigins.bottomLeft) +
                 Vector2.right * velocity.x;
-            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, LayerMask.GetMask(GROUND_LAYER, PLATFORM_LAYER));
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
             float angle = Vector2.Angle(hit.normal, Vector2.up);
             if (hit && angle < collisions.groundAngle) {
                 velocity.y = -(hit.distance - SKIN_WIDTH);
@@ -430,7 +467,7 @@ public class Controller2D : MonoBehaviour {
                     return;
                 }
                 rayOrigin = (directionX == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + velocity;
-                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, PLATFORM_LAYER));
+                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
                 Debug.DrawRay(rayOrigin, Vector2.down, Color.yellow);
                 if (hit && Mathf.Sign(hit.normal.x) == directionX) {
                     angle = Vector2.Angle(hit.normal, Vector2.up);
@@ -477,7 +514,7 @@ public class Controller2D : MonoBehaviour {
                         return;
                     }
                     height = actor.ladderJumpHeight;
-                    speed.x = actor.ladderJumpVelocity * (FacingRight ? 1 : -1);
+                    externalForce.x += actor.ladderJumpVelocity * (FacingRight ? 1 : -1);
                     OnLadder = false;
                     IgnoreLadders();
                     ResetJumpsAndDashes();
@@ -489,7 +526,7 @@ public class Controller2D : MonoBehaviour {
                 }
                 // wall jump
                 if (actor.canWallJump && collisions.hHit && !collisions.below && !collisions.onSlope) {
-                    speed.x = collisions.left ? actor.wallJumpVelocity : -actor.wallJumpVelocity;
+                    externalForce.x += collisions.left ? actor.wallJumpVelocity : -actor.wallJumpVelocity;
                     ResetJumpsAndDashes();
                 }
                 ignorePlatforms = 0;
@@ -537,8 +574,9 @@ public class Controller2D : MonoBehaviour {
                 direction = Vector2.right * Mathf.Sign(direction.x);
             }
             direction = direction.normalized * actor.dashSpeed;
-            speed.x = direction.x;
-            speed.y = direction.y;
+            speed.x = 0;
+            speed.y = 0;
+            externalForce += direction;
             dashCooldown = actor.maxDashCooldown;
             dashStaggerTime = actor.dashStagger;
             Invoke("StopDash", actor.dashDistance / actor.dashSpeed);
@@ -559,7 +597,7 @@ public class Controller2D : MonoBehaviour {
     public void JumpDown() {
         if (CanMove()) {
             if (collisions.vHit &&
-                collisions.vHit.collider.gameObject.layer == LayerMask.NameToLayer(PLATFORM_LAYER)) {
+                collisions.vHit.collider.gameObject.layer == LayerMask.NameToLayer(OW_PLATFORM_LAYER)) {
                 IgnorePlatforms();
             } else {
                 Jump();
@@ -607,6 +645,7 @@ public class Controller2D : MonoBehaviour {
             if (hit) {
                 OnLadder = true;
                 speed.x = 0;
+                externalForce = Vector2.zero;
                 ladderX = hit.transform.position.x;
             }
         }
@@ -680,7 +719,7 @@ public class Controller2D : MonoBehaviour {
         }
         if (dashStaggerTime > 0 && !Dashing) {
             dashStaggerTime -= Time.deltaTime;
-            speed *= Mathf.Max(1 - actor.staggerSpeedFalloff * Time.deltaTime, 0);
+            externalForce *= Mathf.Max(1 - actor.staggerSpeedFalloff * Time.deltaTime, 0);
         }
     }
 
@@ -703,6 +742,14 @@ public class Controller2D : MonoBehaviour {
     /// <returns>Whether the actor can move or not</returns>
     public bool CanMove() {
         return (!KnockedBack);
+    }
+
+    /// <summary>
+    /// Returns the actor's current speed and external force values
+    /// </summary>
+    /// <returns>The actor's total speed</returns>
+    public Vector2 GetTotalSpeed() {
+        return speed + externalForce;
     }
 
     // Used to store temporary locations of raycast origins (the corners of the collider)
