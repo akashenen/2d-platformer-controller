@@ -166,7 +166,8 @@ public class Controller2D : MonoBehaviour {
         if (!OnLadder && !Dashing && dashStaggerTime <= 0) {
             speed.y += GRAVITY * gravityScale * Time.deltaTime;
         }
-        if (collisions.hHit && actor.canWallSlide && speed.y < 0) {
+        if (collisions.hHit && actor.canWallSlide && externalForce.y + speed.y <= 0) {
+            externalForce.y = 0;
             speed.y = -actor.wallSlideVelocity;
         }
     }
@@ -185,6 +186,10 @@ public class Controller2D : MonoBehaviour {
     /// <param name="force">Force to be set</param>
     public void SetForce(Vector2 force) {
         externalForce = force;
+        // resets gravity
+        if (speed.y < 0) {
+            speed.y = 0;
+        }
     }
 
     /// <summary>
@@ -520,6 +525,7 @@ public class Controller2D : MonoBehaviour {
                     ResetJumpsAndDashes();
                 }
                 speed.y = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * height);
+                externalForce.y = 0;
                 animator.SetTrigger(ANIMATION_JUMP);
                 if (actor.jumpCancelStagger) {
                     dashStaggerTime = 0;
@@ -576,7 +582,7 @@ public class Controller2D : MonoBehaviour {
             direction = direction.normalized * actor.dashSpeed;
             speed.x = 0;
             speed.y = 0;
-            externalForce += direction;
+            externalForce = direction;
             dashCooldown = actor.maxDashCooldown;
             dashStaggerTime = actor.dashStagger;
             Invoke("StopDash", actor.dashDistance / actor.dashSpeed);

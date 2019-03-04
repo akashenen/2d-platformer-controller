@@ -17,6 +17,7 @@ There are some different of ways of implementing character movement and controls
 * Dashing and air dashing
 * Ladders/Ropes
 * Moving platforms
+* Jump pads
   
 ### Planned Features
 
@@ -24,7 +25,6 @@ There are some different of ways of implementing character movement and controls
 * Running
 * Ducking/Crawling
 * Crumbling platforms
-* Jump pads
 * Environment hazards
 * Checkpoint system
 
