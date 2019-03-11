@@ -25,6 +25,7 @@ public class JumpPad : MonoBehaviour {
         Controller2D actor = other.GetComponent<Controller2D>();
         if (actor) {
             actor.SetForce(force);
+            actor.ResetJumpsAndDashes();
             animator.SetTrigger(jumpAnimation);
         }
     }

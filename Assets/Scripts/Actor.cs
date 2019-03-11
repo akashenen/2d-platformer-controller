@@ -9,7 +9,7 @@ using UnityEngine;
 /// </summary>
 public class Actor : MonoBehaviour {
 
-    // Actor's base stats
+    // Actor's attibrutes
     [Header("Movement")]
     public float maxSpeed;
     public float accelerationTime;

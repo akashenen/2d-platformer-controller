@@ -1379,6 +1379,70 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 372007647}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &378417358
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 378417360}
+  - component: {fileID: 378417359}
+  m_Layer: 0
+  m_Name: Physics Config
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &378417359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378417358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bd2a72f7e866be4c9aea17c62638a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 256
+  owPlatformMask:
+    serializedVersion: 2
+    m_Bits: 512
+  allPlatformsMask:
+    serializedVersion: 2
+    m_Bits: 768
+  ladderMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  playerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  enemyMask:
+    serializedVersion: 2
+    m_Bits: 0
+  gravity: -50
+  airFriction: 30
+  groundFriction: 50
+--- !u!4 &378417360
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378417358}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &461179833 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4255622971441338439, guid: 877964e487d0ea1429ab1534e7b874fe,
@@ -1618,12 +1682,12 @@ PrefabInstance:
     - target: {fileID: 5223635013792429544, guid: bf025d17afe282e45a9b9a4933eba920,
         type: 3}
       propertyPath: force.x
-      value: -21
+      value: -37
       objectReference: {fileID: 0}
     - target: {fileID: 5223635013792429544, guid: bf025d17afe282e45a9b9a4933eba920,
         type: 3}
       propertyPath: force.y
-      value: 10
+      value: 20
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bf025d17afe282e45a9b9a4933eba920, type: 3}
@@ -2055,7 +2119,7 @@ Transform:
   m_Children:
   - {fileID: 1018075104}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1267181213
 GameObject:
@@ -2140,7 +2204,7 @@ PrefabInstance:
     - target: {fileID: 4255622971441338439, guid: 877964e487d0ea1429ab1534e7b874fe,
         type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4255622971441338439, guid: 877964e487d0ea1429ab1534e7b874fe,
         type: 3}
@@ -2616,7 +2680,7 @@ Transform:
   - {fileID: 461179833}
   - {fileID: 1336647101}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1842375529
 PrefabInstance:
@@ -2764,7 +2828,7 @@ PrefabInstance:
     - target: {fileID: 41342835647678606, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
         type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 41342835647678606, guid: 4fb49a1922deb8249bfdbba50d98dbf1,
         type: 3}
@@ -2883,7 +2947,7 @@ PrefabInstance:
     - target: {fileID: 4255622971441338439, guid: 877964e487d0ea1429ab1534e7b874fe,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 4255622971441338439, guid: 877964e487d0ea1429ab1534e7b874fe,
         type: 3}
@@ -2987,7 +3051,7 @@ PrefabInstance:
     - target: {fileID: 5223635013792429544, guid: bf025d17afe282e45a9b9a4933eba920,
         type: 3}
       propertyPath: force.y
-      value: 23
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bf025d17afe282e45a9b9a4933eba920, type: 3}

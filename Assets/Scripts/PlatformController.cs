@@ -14,6 +14,20 @@ public class PlatformController : MonoBehaviour {
     private Vector2 speed = Vector2.zero;
     private float currentWaitTime = 0;
     private List<Controller2D> actors = new List<Controller2D>();
+    private PhysicsConfig pConfig;
+
+    /// <summary>
+    /// Start is called on the frame when a script is enabled just before
+    /// any of the Update methods is called the first time.
+    /// </summary>
+    void Start() {
+        pConfig = GameObject.FindObjectOfType<PhysicsConfig>();
+        if (!pConfig) {
+            pConfig = (PhysicsConfig) new GameObject().AddComponent(typeof(PhysicsConfig));
+            pConfig.gameObject.name = "Physics Config";
+            Debug.LogWarning("PhysicsConfig not found on the scene! Using default config.");
+        }
+    }
 
     // Update is called once per frame
     void Update() {
@@ -70,7 +84,7 @@ public class PlatformController : MonoBehaviour {
         Controller2D actor = other.GetComponent<Controller2D>();
         if (actor && !actors.Contains(actor)) {
             // doesn't attach to the actor if it's a 1 way platform and the actor is below it
-            if (gameObject.layer == LayerMask.NameToLayer(Controller2D.OW_PLATFORM_LAYER) &&
+            if (gameObject.layer == pConfig.owPlatformMask &&
                 actor.transform.position.y < transform.position.y) {
                 return;
             } else {

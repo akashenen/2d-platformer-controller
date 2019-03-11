@@ -9,22 +9,14 @@ using UnityEngine;
 /// This is a component used alongside Actors that controls all the movement and physics operations
 /// </summary>
 public class Controller2D : MonoBehaviour {
-    // Info that can be used in other classes
-    public static readonly string GROUND_LAYER = "Ground";
-    public static readonly string OW_PLATFORM_LAYER = "OWPlatform";
-    public static readonly string LADDER_LAYER = "Ladder";
-    public static readonly string PLAYER_LAYER = "Player";
-    public static readonly string ENEMY_LAYER = "Enemy";
-    public static readonly float GRAVITY = -50f;
-    public static readonly float AIR_FRICTION = 10f;
     // Colision parameters
-    private static readonly float BOUNDS_EXPANSION = -2;
-    private static readonly float RAY_COUNT = 4;
-    public static readonly float SKIN_WIDTH = 0.015f;
-    public static readonly float FALLTHROUGH_DELAY = 0.2f;
-    public static readonly float LADDER_CLIMB_THRESHOLD = 0.3f;
-    public static readonly float LADDER_DELAY = 0.3f;
-    public static readonly float MAX_CLIMB_ANGLE = 60f;
+    public float boundsExpansion = -2;
+    public float rayCount = 4;
+    public float skinWidth = 0.015f;
+    public float owPlatformDelay = 0.2f;
+    public float ladderClimbThreshold = 0.3f;
+    public float ladderDelay = 0.3f;
+    public float maxClimbAngle = 60f;
     // Animation attributes and names
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
     private static readonly string ANIMATION_V_SPEED = "vSpeed";
@@ -39,6 +31,7 @@ public class Controller2D : MonoBehaviour {
     private Actor actor;
     private BoxCollider2D myCollider;
     private Animator animator;
+    private PhysicsConfig pConfig;
 
     // Physics properties
     private RaycastOrigins raycastOrigins;
@@ -63,6 +56,7 @@ public class Controller2D : MonoBehaviour {
     public bool OnLadder { get; set; }
     public bool KnockedBack { get; set; }
     public bool Dashing { get; set; }
+    public Vector2 TotalSpeed { get { return speed + externalForce; } }
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
@@ -76,6 +70,12 @@ public class Controller2D : MonoBehaviour {
         OnLadder = false;
         Dashing = false;
         CalculateSpacing();
+        pConfig = GameObject.FindObjectOfType<PhysicsConfig>();
+        if (!pConfig) {
+            pConfig = (PhysicsConfig) new GameObject().AddComponent(typeof(PhysicsConfig));
+            pConfig.gameObject.name = "Physics Config";
+            Debug.LogWarning("PhysicsConfig not found on the scene! Using default config.");
+        }
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public class Controller2D : MonoBehaviour {
         UpdateExternalForce();
         UpdateGravity();
         collisions.Reset();
-        Move((speed + externalForce) * Time.deltaTime);
+        Move((TotalSpeed) * Time.deltaTime);
         SetAnimations();
     }
 
@@ -97,9 +97,9 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     void CalculateSpacing() {
         Bounds bounds = myCollider.bounds;
-        bounds.Expand(SKIN_WIDTH * BOUNDS_EXPANSION);
-        horizontalRaySpacing = bounds.size.y / (RAY_COUNT - 1);
-        verticalRaySpacing = bounds.size.x / (RAY_COUNT - 1);
+        bounds.Expand(skinWidth * boundsExpansion);
+        horizontalRaySpacing = bounds.size.y / (rayCount - 1);
+        verticalRaySpacing = bounds.size.x / (rayCount - 1);
     }
 
     /// <summary>
@@ -107,7 +107,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     void UpdateRaycastOrigins() {
         Bounds bounds = myCollider.bounds;
-        bounds.Expand(SKIN_WIDTH * BOUNDS_EXPANSION);
+        bounds.Expand(skinWidth * boundsExpansion);
         raycastOrigins.bottomLeft = new Vector2(bounds.min.x, bounds.min.y);
         raycastOrigins.bottomRight = new Vector2(bounds.max.x, bounds.min.y);
         raycastOrigins.topLeft = new Vector2(bounds.min.x, bounds.max.y);
@@ -151,11 +151,13 @@ public class Controller2D : MonoBehaviour {
         transform.Translate(velocity);
         // Checks for ground and ceiling, resets jumps if grounded
         if (collisions.vHit) {
-            if (collisions.below) {
-                ResetJumpsAndDashes();
+            if ((collisions.below && TotalSpeed.y < 0) || (collisions.above && TotalSpeed.y > 0)) {
+                if (collisions.below) {
+                    ResetJumpsAndDashes();
+                }
+                speed.y = 0;
+                externalForce.y = 0;
             }
-            speed.y = 0;
-            externalForce.y = 0;
         }
     }
 
@@ -164,7 +166,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     private void UpdateGravity() {
         if (!OnLadder && !Dashing && dashStaggerTime <= 0) {
-            speed.y += GRAVITY * gravityScale * Time.deltaTime;
+            speed.y += pConfig.gravity * gravityScale * Time.deltaTime;
         }
         if (collisions.hHit && actor.canWallSlide && externalForce.y + speed.y <= 0) {
             externalForce.y = 0;
@@ -190,14 +192,18 @@ public class Controller2D : MonoBehaviour {
         if (speed.y < 0) {
             speed.y = 0;
         }
+        // cancels dash
+        Dashing = false;
+        dashStaggerTime = 0;
     }
 
     /// <summary>
     /// Reduces the external force over time according to the air or ground frictions
     /// </summary>
     private void UpdateExternalForce() {
+        float friction = collisions.onGround ? pConfig.groundFriction : pConfig.airFriction;
         if (!Dashing && dashStaggerTime <= 0) {
-            externalForce = Vector2.MoveTowards(externalForce, Vector2.zero, AIR_FRICTION * Time.deltaTime);
+            externalForce = Vector2.MoveTowards(externalForce, Vector2.zero, friction * Time.deltaTime);
         }
     }
 
@@ -220,16 +226,16 @@ public class Controller2D : MonoBehaviour {
     /// <param name="direction">Direction the actor is moving, -1 = left, 1 = right</param>
     private void CheckGround(float direction) {
         Vector2 rayOrigin = direction == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
-        rayOrigin.y += SKIN_WIDTH * 2;
-        for (int i = 0; i < RAY_COUNT; i++) {
+        rayOrigin.y += skinWidth * 2;
+        for (int i = 0; i < rayCount; i++) {
             rayOrigin += (direction == 1 ? Vector2.right : Vector2.left) * (verticalRaySpacing * i);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down,
-                SKIN_WIDTH * 4f, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
+                skinWidth * 4f, pConfig.allPlatformsMask);
             if (hit) {
                 collisions.onGround = true;
                 collisions.groundAngle = Vector2.Angle(hit.normal, Vector2.up);
                 collisions.groundDirection = Mathf.Sign(hit.normal.x);
-                Debug.DrawRay(rayOrigin, Vector2.down * SKIN_WIDTH * 2, Color.blue);
+                Debug.DrawRay(rayOrigin, Vector2.down * skinWidth * 2, Color.blue);
                 break;
             }
         }
@@ -242,27 +248,27 @@ public class Controller2D : MonoBehaviour {
     /// <param name="velocity">The current object velocity used for the raycast lenght</param>
     private void HorizontalCollisions(ref Vector2 velocity) {
         float directionX = Mathf.Sign(velocity.x);
-        float rayLength = Mathf.Abs(velocity.x) + SKIN_WIDTH;
-        for (int i = 0; i < RAY_COUNT; i++) {
+        float rayLength = Mathf.Abs(velocity.x) + skinWidth;
+        for (int i = 0; i < rayCount; i++) {
             Vector2 rayOrigin = directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
             rayOrigin += Vector2.up * (horizontalRaySpacing * i);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX,
-                rayLength, LayerMask.GetMask(GROUND_LAYER));
+                rayLength, pConfig.groundMask);
             Debug.DrawRay(rayOrigin, Vector2.right * directionX * rayLength, Color.red);
             if (hit) {
                 float angle = Vector2.Angle(hit.normal, Vector2.up);
-                if (i == 0 && !collisions.onSlope && angle <= MAX_CLIMB_ANGLE) {
+                if (i == 0 && !collisions.onSlope && angle <= maxClimbAngle) {
                     collisions.onGround = true;
                     collisions.groundAngle = angle;
                     collisions.groundDirection = Mathf.Abs(hit.normal.x);
-                    velocity.x -= (hit.distance - SKIN_WIDTH) * directionX;
+                    velocity.x -= (hit.distance - skinWidth) * directionX;
                     ClimbSlope(ref velocity);
-                    velocity.x += (hit.distance - SKIN_WIDTH) * directionX;
+                    velocity.x += (hit.distance - skinWidth) * directionX;
                 }
                 if (!(i == 0 && collisions.onSlope)) {
-                    if (angle > MAX_CLIMB_ANGLE) {
-                        velocity.x = Mathf.Min(Mathf.Abs(velocity.x), (hit.distance - SKIN_WIDTH)) * directionX;
-                        rayLength = Mathf.Min(Mathf.Abs(velocity.x) + SKIN_WIDTH, hit.distance);
+                    if (angle > maxClimbAngle) {
+                        velocity.x = Mathf.Min(Mathf.Abs(velocity.x), (hit.distance - skinWidth)) * directionX;
+                        rayLength = Mathf.Min(Mathf.Abs(velocity.x) + skinWidth, hit.distance);
                         if (collisions.onSlope) {
                             if (velocity.y < 0) {
                                 velocity.y = 0;
@@ -291,30 +297,30 @@ public class Controller2D : MonoBehaviour {
         if (OnLadder) {
             Vector2 origin = myCollider.bounds.center + Vector3.up *
                 (myCollider.bounds.extents.y * Mathf.Sign(velocity.y) + velocity.y);
-            Collider2D hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+            Collider2D hit = Physics2D.OverlapCircle(origin, 0, pConfig.groundMask);
             if (!hit) {
                 return;
             }
-            hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(LADDER_LAYER));
+            hit = Physics2D.OverlapCircle(origin, 0, pConfig.ladderMask);
             if (hit) {
                 return;
             }
         }
         float directionY = Mathf.Sign(velocity.y);
-        float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
-        for (int i = 0; i < RAY_COUNT; i++) {
+        float rayLength = Mathf.Abs(velocity.y) + skinWidth;
+        for (int i = 0; i < rayCount; i++) {
             Vector2 rayOrigin = directionY == -1 ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
             rayOrigin += Vector2.right * (verticalRaySpacing * i + velocity.x);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
-                rayLength, LayerMask.GetMask(GROUND_LAYER));
+                rayLength, pConfig.groundMask);
             Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength, Color.red);
             // for one way platforms
             if (ignorePlatforms <= 0 && directionY < 0 && !hit) {
                 hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
-                    rayLength, LayerMask.GetMask(OW_PLATFORM_LAYER));
+                    rayLength, pConfig.owPlatformMask);
             }
             if (hit) {
-                velocity.y = (hit.distance - SKIN_WIDTH) * directionY;
+                velocity.y = (hit.distance - skinWidth) * directionY;
                 rayLength = hit.distance;
                 if (OnLadder && directionY < 0) {
                     OnLadder = false;
@@ -379,7 +385,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="velocity">The current actor velocity</param>
     private void ClimbSlope(ref Vector2 velocity) {
-        if (collisions.groundAngle <= MAX_CLIMB_ANGLE) {
+        if (collisions.groundAngle <= maxClimbAngle) {
             float distance = Mathf.Abs(velocity.x);
             float yVelocity = Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad) * distance;
             if (velocity.y <= yVelocity) {
@@ -399,7 +405,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="velocity">The current actor velocity</param>
     private void DescendSlope(ref Vector2 velocity) {
-        if (collisions.groundAngle <= MAX_CLIMB_ANGLE) {
+        if (collisions.groundAngle <= maxClimbAngle) {
             float distance = Mathf.Abs(velocity.x);
             velocity.x = (Mathf.Cos(collisions.groundAngle * Mathf.Deg2Rad) * distance) * Mathf.Sign(velocity.x);
             velocity.y = -Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad) * distance;
@@ -420,20 +426,20 @@ public class Controller2D : MonoBehaviour {
         float directionX = Mathf.Sign(velocity.x);
         if (velocity.y > 0) {
             // climb steeper slope
-            float rayLength = Mathf.Abs(velocity.x) + SKIN_WIDTH * 2;
+            float rayLength = Mathf.Abs(velocity.x) + skinWidth * 2;
             Vector2 rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) +
                 Vector2.up * velocity.y;
-            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX, rayLength, LayerMask.GetMask(GROUND_LAYER));
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX, rayLength, pConfig.groundMask);
             if (hit) {
                 float angle = Vector2.Angle(hit.normal, Vector2.up);
                 if (angle != collisions.groundAngle) {
-                    velocity.x = (hit.distance - SKIN_WIDTH) * directionX;
+                    velocity.x = (hit.distance - skinWidth) * directionX;
                     collisions.groundAngle = angle;
                 }
             } else {
                 // climb milder slope or flat ground
                 rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + velocity;
-                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
+                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, pConfig.allPlatformsMask);
                 Debug.DrawRay(rayOrigin, Vector2.down, Color.yellow);
                 if (hit) {
                     float angle = Vector2.Angle(hit.normal, Vector2.up);
@@ -452,19 +458,19 @@ public class Controller2D : MonoBehaviour {
                         float removeY = Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad) * overshoot;
                         float addX = Mathf.Cos(angle * Mathf.Deg2Rad) * overshoot * Mathf.Sign(velocity.x);
                         float addY = Mathf.Sin(angle * Mathf.Deg2Rad) * overshoot;
-                        velocity += new Vector2(addX - removeX, addY - removeY + SKIN_WIDTH);
+                        velocity += new Vector2(addX - removeX, addY - removeY + skinWidth);
                     }
                 }
             }
         } else {
             // descend milder slope or flat ground
-            float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
+            float rayLength = Mathf.Abs(velocity.y) + skinWidth;
             Vector2 rayOrigin = (directionX == -1 ? raycastOrigins.bottomRight : raycastOrigins.bottomLeft) +
                 Vector2.right * velocity.x;
-            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, rayLength, pConfig.allPlatformsMask);
             float angle = Vector2.Angle(hit.normal, Vector2.up);
             if (hit && angle < collisions.groundAngle) {
-                velocity.y = -(hit.distance - SKIN_WIDTH);
+                velocity.y = -(hit.distance - skinWidth);
                 collisions.groundAngle = angle;
             } else {
                 // descend steeper slope
@@ -472,7 +478,7 @@ public class Controller2D : MonoBehaviour {
                     return;
                 }
                 rayOrigin = (directionX == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + velocity;
-                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, LayerMask.GetMask(GROUND_LAYER, OW_PLATFORM_LAYER));
+                hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, pConfig.allPlatformsMask);
                 Debug.DrawRay(rayOrigin, Vector2.down, Color.yellow);
                 if (hit && Mathf.Sign(hit.normal.x) == directionX) {
                     angle = Vector2.Angle(hit.normal, Vector2.up);
@@ -490,7 +496,7 @@ public class Controller2D : MonoBehaviour {
                         float removeY = -Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad) * overshoot;
                         float addX = Mathf.Cos(angle * Mathf.Deg2Rad) * overshoot * Mathf.Sign(velocity.x);
                         float addY = -Mathf.Sin(angle * Mathf.Deg2Rad) * overshoot;
-                        velocity += new Vector2(addX - removeX, addY - removeY - SKIN_WIDTH);
+                        velocity += new Vector2(addX - removeX, addY - removeY - skinWidth);
                     }
                 }
             }
@@ -509,12 +515,12 @@ public class Controller2D : MonoBehaviour {
                 float height = actor.jumpHeight;
                 if (OnLadder) {
                     Vector2 origin = myCollider.bounds.center + Vector3.up * myCollider.bounds.extents.y;
-                    Collider2D hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                    Collider2D hit = Physics2D.OverlapCircle(origin, 0, pConfig.groundMask);
                     if (hit) {
                         return;
                     }
                     origin = myCollider.bounds.center + Vector3.down * myCollider.bounds.extents.y;
-                    hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                    hit = Physics2D.OverlapCircle(origin, 0, pConfig.groundMask);
                     if (hit) {
                         return;
                     }
@@ -524,7 +530,7 @@ public class Controller2D : MonoBehaviour {
                     IgnoreLadders();
                     ResetJumpsAndDashes();
                 }
-                speed.y = Mathf.Sqrt(2 * Mathf.Abs(GRAVITY) * height);
+                speed.y = Mathf.Sqrt(2 * Mathf.Abs(pConfig.gravity) * height);
                 externalForce.y = 0;
                 animator.SetTrigger(ANIMATION_JUMP);
                 if (actor.jumpCancelStagger) {
@@ -549,12 +555,12 @@ public class Controller2D : MonoBehaviour {
         if (CanMove() && actor.canDash && dashCooldown <= 0) {
             if (OnLadder) {
                 Vector2 origin = myCollider.bounds.center + Vector3.up * myCollider.bounds.extents.y;
-                Collider2D hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                Collider2D hit = Physics2D.OverlapCircle(origin, 0, pConfig.groundMask);
                 if (hit) {
                     return;
                 }
                 origin = myCollider.bounds.center + Vector3.down * myCollider.bounds.extents.y;
-                hit = Physics2D.OverlapCircle(origin, 0, LayerMask.GetMask(GROUND_LAYER));
+                hit = Physics2D.OverlapCircle(origin, 0, pConfig.groundMask);
                 if (hit) {
                     return;
                 }
@@ -603,7 +609,8 @@ public class Controller2D : MonoBehaviour {
     public void JumpDown() {
         if (CanMove()) {
             if (collisions.vHit &&
-                collisions.vHit.collider.gameObject.layer == LayerMask.NameToLayer(OW_PLATFORM_LAYER)) {
+                LayerMask.GetMask(LayerMask.LayerToName(collisions.vHit.collider.gameObject.layer)) ==
+                pConfig.owPlatformMask) {
                 IgnorePlatforms();
             } else {
                 Jump();
@@ -615,20 +622,20 @@ public class Controller2D : MonoBehaviour {
     /// The actor will briefly ignore platforms so it can jump down through them
     /// </summary>
     private void IgnorePlatforms() {
-        ignorePlatforms = FALLTHROUGH_DELAY;
+        ignorePlatforms = owPlatformDelay;
     }
 
     /// <summary>
     /// The actor will briefly ignore ladders so it can jump or dash off of them
     /// </summary>
     private void IgnoreLadders() {
-        ignoreLadders = LADDER_DELAY;
+        ignoreLadders = ladderDelay;
     }
 
     /// <summary>
     /// Gives the actor its maximum extra jumps and air dashes
     /// </summary>
-    private void ResetJumpsAndDashes() {
+    public void ResetJumpsAndDashes() {
         extraJumps = actor.maxExtraJumps;
         airDashes = actor.maxAirDashes;
     }
@@ -644,10 +651,10 @@ public class Controller2D : MonoBehaviour {
         float radius = myCollider.bounds.extents.x;
         Vector2 topOrigin = ((Vector2) myCollider.bounds.center) + Vector2.up * (myCollider.bounds.extents.y - radius);
         Vector2 bottomOrigin = ((Vector2) myCollider.bounds.center) + Vector2.down *
-            (myCollider.bounds.extents.y + radius + SKIN_WIDTH);
-        if (!OnLadder && direction != 0 && Mathf.Abs(direction) > LADDER_CLIMB_THRESHOLD) {
+            (myCollider.bounds.extents.y + radius + skinWidth);
+        if (!OnLadder && direction != 0 && Mathf.Abs(direction) > ladderClimbThreshold) {
             Collider2D hit = Physics2D.OverlapCircle(direction == -1 ? bottomOrigin : topOrigin,
-                radius, LayerMask.GetMask(LADDER_LAYER));
+                radius, pConfig.ladderMask);
             if (hit) {
                 OnLadder = true;
                 speed.x = 0;
@@ -679,10 +686,10 @@ public class Controller2D : MonoBehaviour {
             }
             // checks ladder end
             Collider2D hit = Physics2D.OverlapCircle(topOrigin + Vector2.up * (speed.y * Time.deltaTime + radius),
-                0, LayerMask.GetMask(LADDER_LAYER));
+                0, pConfig.ladderMask);
             if (!hit) {
                 hit = Physics2D.OverlapCircle(bottomOrigin + Vector2.up * (speed.y * Time.deltaTime + radius),
-                    0, LayerMask.GetMask(LADDER_LAYER));
+                    0, pConfig.ladderMask);
                 if (!hit) {
                     OnLadder = false;
                     if (speed.y > 0) {
@@ -707,7 +714,7 @@ public class Controller2D : MonoBehaviour {
     private void UpdateKnockback() {
         if (KnockedBack) {
             float directionX = Mathf.Sign(speed.x);
-            float newHSpeed = Mathf.Abs(speed.x) - (AIR_FRICTION * Time.deltaTime);
+            float newHSpeed = Mathf.Abs(speed.x) - (pConfig.airFriction * Time.deltaTime);
             if (newHSpeed <= 0) {
                 newHSpeed = 0;
                 KnockedBack = false;
@@ -748,14 +755,6 @@ public class Controller2D : MonoBehaviour {
     /// <returns>Whether the actor can move or not</returns>
     public bool CanMove() {
         return (!KnockedBack);
-    }
-
-    /// <summary>
-    /// Returns the actor's current speed and external force values
-    /// </summary>
-    /// <returns>The actor's total speed</returns>
-    public Vector2 GetTotalSpeed() {
-        return speed + externalForce;
     }
 
     // Used to store temporary locations of raycast origins (the corners of the collider)
