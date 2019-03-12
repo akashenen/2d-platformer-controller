@@ -144,7 +144,7 @@ public class Controller2D : MonoBehaviour {
         if (velocity.y > 0 || (velocity.y < 0 && (!collisions.onSlope || velocity.x == 0))) {
             VerticalCollisions(ref velocity);
         }
-        if (collisions.onGround && velocity.x != 0) {
+        if (collisions.onGround && velocity.x != 0 && speed.y <= 0) {
             HandleSlopeChange(ref velocity);
         }
         Debug.DrawRay(transform.position, velocity * 3f, Color.green);

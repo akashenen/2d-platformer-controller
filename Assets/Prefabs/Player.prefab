@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 41342835647678602}
   - component: {fileID: 41342835647678603}
   - component: {fileID: 1882247456}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,6 +93,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce1e11311d1d79e4dbb70bb8a8a5928f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boundsExpansion: -2
+  rayCount: 4
+  skinWidth: 0.015
+  owPlatformDelay: 0.2
+  ladderClimbThreshold: 0.3
+  ladderDelay: 0.3
+  maxClimbAngle: 60
+  speed: {x: 0, y: 0}
+  externalForce: {x: 0, y: 0}
 --- !u!114 &41342835647678603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,7 +130,7 @@ MonoBehaviour:
   wallJumpVelocity: 5
   canDash: 1
   omnidirectionalDash: 1
-  dashDownSlopes: 0
+  dashDownSlopes: 1
   canJumpDuringDash: 1
   jumpCancelStagger: 1
   dashDistance: 3
@@ -130,6 +139,11 @@ MonoBehaviour:
   staggerSpeedFalloff: 20
   maxDashCooldown: 0.5
   maxAirDashes: 2
+  ladderSpeed: 5
+  ladderAccelerationTime: 0.1
+  ladderDecelerationTime: 0.1
+  ladderJumpHeight: 1
+  ladderJumpVelocity: 3
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -207,8 +221,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -1303926481
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: f30ac12150d3cb04f9fc6596d35c2e08, type: 3}
   m_Color: {r: 0.3160377, g: 0.51240283, b: 1, a: 1}

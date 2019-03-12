@@ -17,6 +17,7 @@ There are some different of ways of implementing character movement and controls
 * Dashing and air dashing
 * Ladders/Ropes
 * Moving platforms
+* Crumbling platforms
 * Jump pads
   
 ### Planned Features
@@ -24,7 +25,6 @@ There are some different of ways of implementing character movement and controls
 * Ledge grabs
 * Running
 * Ducking/Crawling
-* Crumbling platforms
 * Environment hazards
 * Checkpoint system
 
@@ -34,7 +34,7 @@ To use this project you need Unity 2017.1 or higher.
 
 The main classes used in this project are the [Actor](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Actor.cs), used mainly for attributes and other adjustable values, and the [Controller2D](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Controller2D.cs), which handles all the movement and collision algorithms.
 
-### Movement values
+### Actor Properties
 
 #### Movement
 
@@ -76,10 +76,27 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 #### Ladders
 
 * **ladderSpeed:** How fast the actor can move up and down slopes
-* **ladderAccelerationTime:** How much time (in seconds) an actor will take to reach maximum speed on ladders. A value of 0 will allow the actor to reach maximum speed instantly
+* **ladderAccelerationTime:** How much time (in seconds) an actor will take to reach maximum speed on ladders. A value of 0 will allow the actor to reach its maximum speed instantly
 * **ladderDecelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed on ladders. A value of 0 will allow the actor to stop instantly
 * **ladderJumpHeight:** How high (in units) the actor can jump when holding a ladder
 * **ladderJumpVelocity:** Horizonal velocity added to the actor when jumping from ladders
+
+### Platform Properties
+
+* **currentWaypoint:** For moving platforms, set this as the first waypoint the platform will move towards, after arriving at that waypoint, the platform will automatically target the next one on the line (which needs to be configured in each waypoint object)
+* **maxSpeed:** The maximum speed in which the platform can move
+* **accelerationDistance:**  The distance (in units) the platform will cover while accelerating to maximum speed. A value of 0 will make the platform reach its maximum speed instantly
+* **decelerationDistance:** The distance (in units) the platform will cover while decelerating when arriving at the current waypoint. A value of 0 will make the platform reach the waypoint at full speed
+* **waitTime:** Hou much time (in seconds) the platform will wait at each waypoint before heading on to the next one
+* **crumbleTime:** How much time it takes for a platform to crumble and lose its hitbox. A value of 0 will make the platform never crumble
+* **restoreTime:** How much time it takes for the platform to be restored after it crumbles. A value of 0 will cause the platform not to be restored automatically, but it can be restored by calling the method Restore() (useful if you want it to have other conditions to be restored)
+* **onlyPlayerCrumble:** If enabled, the platform will only crumble if a player touches it, causing it to remain active if touched by enemies or other objects
+
+### Physics Config
+
+* **gravity:** How much vertical acceleration will be applied to an actor each second (should be a negative value)
+* **airFriction:** How much speed per second an actor will lose while in the air (doesn't affect player movement, only external forces like knockbacks and jump pads)
+* **groundFriction:** How much speed per second an actor will lose while touching the ground (doesn't affect player movement, only external forces like knockbacks and jump pads)
 
 ## Authors
 
