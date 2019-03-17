@@ -46,8 +46,8 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 #### Jumping
 
 * **maxExtraJumps:** How many times an actor can jump again without touching the ground
-* **jumpHeight:** How high (in units) the actor can jump.
-* **jumpHoldScale:** How much the actor is affected by gravity while the jump button is held. This affects not only jump height but also falling speed while holding the button. A value of 1 will make holding the button have no effect
+* **maxJumpHeight:** How high (in units) the actor can jump while holding the jump button
+* **minJumpHeight:** How high (in units) the actor will keep jumping after releasing the jump button, ending the jump earlier
 * **advancedAirControl:** If enabled, will allow you to set values for acceleration and deceleration while in the air, making it possible to have more stiff (or otherwise) controls while airborne. If disabled, will use the default acceleration and deceleration times for air control
 * **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps
 * **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground

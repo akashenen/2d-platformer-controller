@@ -29,8 +29,8 @@ public class PlayerController : MonoBehaviour {
                 controller2D.Jump();
             }
         }
-        if (Input.GetButton("Jump"))
-            controller2D.SetGravityScale(actor.jumpHoldScale);
+        if (Input.GetButtonUp("Jump"))
+            controller2D.EndJump();
         else
             controller2D.SetGravityScale(1);
         if (Input.GetButtonDown("Dash")) {

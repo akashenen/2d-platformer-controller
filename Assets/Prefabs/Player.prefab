@@ -119,8 +119,8 @@ MonoBehaviour:
   decelerationTime: 0.3
   canUseSlopes: 1
   maxExtraJumps: 1
-  jumpHeight: 2
-  jumpHoldScale: 0.6
+  maxJumpHeight: 3.5
+  minJumpHeight: 0.2
   advancedAirControl: 1
   airAccelerationTime: 0.6
   airDecelerationTime: 0.6

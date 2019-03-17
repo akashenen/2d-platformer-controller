@@ -9,7 +9,7 @@ public class PhysicsConfig : MonoBehaviour {
     public LayerMask ladderMask;
     public LayerMask playerMask;
     public LayerMask enemyMask;
-    public float gravity = -50f;
+    public float gravity = -30f;
     public float airFriction = 30f;
     public float groundFriction = 50f;
 
