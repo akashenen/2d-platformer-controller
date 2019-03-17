@@ -93,13 +93,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce1e11311d1d79e4dbb70bb8a8a5928f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boundsExpansion: -2
-  rayCount: 4
+  raySpacing: 0.25
   skinWidth: 0.015
   owPlatformDelay: 0.2
   ladderClimbThreshold: 0.3
   ladderDelay: 0.3
-  maxClimbAngle: 60
+  maxSlopeAngle: 60
+  minWallAngle: 60
   speed: {x: 0, y: 0}
   externalForce: {x: 0, y: 0}
 --- !u!114 &41342835647678603
@@ -125,9 +125,9 @@ MonoBehaviour:
   airAccelerationTime: 0.6
   airDecelerationTime: 0.6
   canWallSlide: 1
-  wallSlideVelocity: 2
+  wallSlideSpeed: 2
   canWallJump: 1
-  wallJumpVelocity: 5
+  wallJumpSpeed: 10
   canDash: 1
   omnidirectionalDash: 1
   dashDownSlopes: 1
@@ -143,7 +143,7 @@ MonoBehaviour:
   ladderAccelerationTime: 0.1
   ladderDecelerationTime: 0.1
   ladderJumpHeight: 1
-  ladderJumpVelocity: 3
+  ladderJumpSpeed: 10
 --- !u!114 &1882247456
 MonoBehaviour:
   m_ObjectHideFlags: 0

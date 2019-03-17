@@ -24,9 +24,9 @@ public class Actor : MonoBehaviour {
     public float airDecelerationTime;
     [Header("Wall Sliding/Jumping")]
     public bool canWallSlide;
-    public float wallSlideVelocity;
+    public float wallSlideSpeed;
     public bool canWallJump;
-    public float wallJumpVelocity;
+    public float wallJumpSpeed;
     [Header("Dashing")]
     public bool canDash;
     public bool omnidirectionalDash;
@@ -44,5 +44,5 @@ public class Actor : MonoBehaviour {
     public float ladderAccelerationTime;
     public float ladderDecelerationTime;
     public float ladderJumpHeight;
-    public float ladderJumpVelocity;
+    public float ladderJumpSpeed;
 }

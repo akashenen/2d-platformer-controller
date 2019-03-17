@@ -55,9 +55,9 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 #### Wall Sliding and Jumping
 
 * **canWallSlide:** If enabled, the actor will be able to slide down walls
-* **wallSlideVelocity:** Speed in which the actor will slide down walls if sliding is enabled
+* **wallSlideSpeed:** Speed in which the actor will slide down walls if sliding is enabled
 * **canWallJump:** If enabled, the actor will be able to jump from walls
-* **wallJumpVelocity:** Horizonal velocity added to the actor when jumping from walls
+* **wallJumpSpeed:** Horizonal speed added to the actor when jumping from walls
 
 #### Dashing
 
@@ -79,7 +79,7 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 * **ladderAccelerationTime:** How much time (in seconds) an actor will take to reach maximum speed on ladders. A value of 0 will allow the actor to reach its maximum speed instantly
 * **ladderDecelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed on ladders. A value of 0 will allow the actor to stop instantly
 * **ladderJumpHeight:** How high (in units) the actor can jump when holding a ladder
-* **ladderJumpVelocity:** Horizonal velocity added to the actor when jumping from ladders
+* **ladderJumpSpeed:** Horizonal speed added to the actor when jumping from ladders
 
 ### Platform Properties
 

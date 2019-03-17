@@ -123,7 +123,24 @@ public class PlatformController : MonoBehaviour {
     /// object (2D physics only).
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision.</param>
+    void OnTriggerEnter2D(Collider2D other) {
+        AttachActor(other);
+    }
+
+    /// <summary>
+    /// Sent when another object enters a trigger collider attached to this
+    /// object (2D physics only).
+    /// </summary>
+    /// <param name="other">The other Collider2D involved in this collision.</param>
     void OnTriggerStay2D(Collider2D other) {
+        AttachActor(other);
+    }
+
+    /// <summary>
+    /// Tries to attach and actor to the platform if it's not already attached
+    /// </summary>
+    /// <param name="other">The other Collider2D involved in this collision</param>
+    private void AttachActor(Collider2D other) {
         if (crumbled) {
             return;
         }
