@@ -12,6 +12,7 @@ public class PhysicsConfig : MonoBehaviour {
     public float gravity = -30f;
     public float airFriction = 30f;
     public float groundFriction = 50f;
+    public float staggerSpeedFalloff = 50f;
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before

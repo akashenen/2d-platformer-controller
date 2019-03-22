@@ -36,7 +36,6 @@ public class Actor : MonoBehaviour {
     public float dashDistance;
     public float dashSpeed;
     public float dashStagger;
-    public float staggerSpeedFalloff;
     public float maxDashCooldown;
     public int maxAirDashes;
     [Header("Ladders")]

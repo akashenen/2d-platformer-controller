@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider2D))]
+[RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Actor))]
 [RequireComponent(typeof(Animator))]
 /// <summary>
@@ -26,6 +27,7 @@ public class Controller2D : MonoBehaviour {
     private static readonly string ANIMATION_WALL = "onWall";
     private static readonly string ANIMATION_FACING = "facingRight";
     private static readonly string ANIMATION_LADDER = "onLadder";
+    private static readonly string ANIMATION_INVULNERABLE = "invulnerable";
 
     // Other Componenents
     private Actor actor;
@@ -45,18 +47,22 @@ public class Controller2D : MonoBehaviour {
     private float verticalRaySpacing;
     private float verticalRayCount;
     private float gravityScale = 1;
-    private float ignorePlatforms = 0;
-    private float ignoreLadders = 0;
+    private float ignorePlatformsTime = 0;
+    private float ignoreLaddersTime = 0;
     private int extraJumps = 0;
     private int airDashes = 0;
     private float dashCooldown = 0;
-    private float dashStaggerTime = 0;
+    private float airStaggerTime = 0;
+    private float stunTime = 0;
+    private float invulnerableTime = 0;
     private float ladderX = 0;
 
     // Public propoerties
     public bool FacingRight { get; set; } // false == left, true == right
     public bool OnLadder { get; set; }
-    public bool KnockedBack { get; set; }
+    public bool Stunned { get { return stunTime > 0; } }
+    public bool Invulnerable { get { return invulnerableTime > 0; } }
+    public bool Immobile { get; set; }
     public bool Dashing { get; set; }
     public Vector2 TotalSpeed { get { return speed + externalForce; } }
 
@@ -68,7 +74,6 @@ public class Controller2D : MonoBehaviour {
         actor = GetComponent<Actor>();
         myCollider = GetComponent<BoxCollider2D>();
         animator = GetComponent<Animator>();
-        KnockedBack = false;
         OnLadder = false;
         Dashing = false;
         CalculateSpacing();
@@ -86,7 +91,7 @@ public class Controller2D : MonoBehaviour {
     void Update() {
         UpdateTimers();
         UpdateDash();
-        UpdateKnockback();
+        UpdateAirStagger();
         UpdateExternalForce();
         UpdateGravity();
         collisions.Reset();
@@ -116,7 +121,6 @@ public class Controller2D : MonoBehaviour {
         raycastOrigins.bottomRight = new Vector2(bounds.max.x, bounds.min.y);
         raycastOrigins.topLeft = new Vector2(bounds.min.x, bounds.max.y);
         raycastOrigins.topRight = new Vector2(bounds.max.x, bounds.max.y);
-
     }
 
     /*-------------------------*/
@@ -135,7 +139,7 @@ public class Controller2D : MonoBehaviour {
             if (deltaMove.y <= 0 && actor.canUseSlopes) {
                 if (collisions.onSlope) {
                     if (collisions.groundDirection == xDir) {
-                        if ((!Dashing && dashStaggerTime <= 0) || actor.dashDownSlopes) {
+                        if ((!Dashing && airStaggerTime <= 0) || actor.dashDownSlopes) {
                             DescendSlope(ref deltaMove);
                         }
                     } else {
@@ -183,7 +187,7 @@ public class Controller2D : MonoBehaviour {
     /// Updates the actor's vertical speed according to gravity, gravity scale and other properties
     /// </summary>
     private void UpdateGravity() {
-        if (!OnLadder && !Dashing && dashStaggerTime <= 0) {
+        if (!OnLadder && !Dashing && airStaggerTime <= 0) {
             speed.y += pConfig.gravity * gravityScale * Time.deltaTime;
         }
         if (collisions.hHit && actor.canWallSlide && TotalSpeed.y <= 0) {
@@ -212,7 +216,41 @@ public class Controller2D : MonoBehaviour {
         }
         // cancels dash
         Dashing = false;
-        dashStaggerTime = 0;
+        airStaggerTime = 0;
+    }
+
+    /// <summary>
+    /// Sets the actor's air stagger duration, causing it not to be affected by gravity or inputs and 
+    /// osing speed over time
+    /// </summary>
+    /// <param name="duration">Air stagger duration</param>
+    public void SetAirStagger(float duration) {
+        airStaggerTime = duration;
+    }
+
+    /// <summary>
+    /// Adds a knockback force to the actor into an specific direction, while also disabling their movement
+    /// for the specified duration
+    /// </summary>
+    /// <param name="force">Direction and magnitude of the force applied</param>
+    /// <param name="stunDuration">How much time the actor will be stunned</param>
+    public void Knockback(Vector2 force, float stunDuration) {
+        if (!Invulnerable) {
+            Dashing = false;
+            airStaggerTime = 0;
+            externalForce = Vector2.zero;
+            speed = Vector2.zero;
+            stunTime = stunDuration;
+            ApplyForce(force);
+        }
+    }
+
+    /// <summary>
+    /// Makes the actor invulnerable for the specified duration, preventing further damage or knockbacks
+    /// </summary>
+    /// <param name="duration">Invulnerability duration</param>
+    public void setInvunerable(float duration) {
+        invulnerableTime = duration;
     }
 
     /// <summary>
@@ -220,7 +258,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     private void UpdateExternalForce() {
         float friction = collisions.onGround ? pConfig.groundFriction : pConfig.airFriction;
-        if (!Dashing && dashStaggerTime <= 0) {
+        if (!Dashing && airStaggerTime <= 0) {
             externalForce = Vector2.MoveTowards(externalForce, Vector2.zero, friction * Time.deltaTime);
         }
     }
@@ -236,6 +274,7 @@ public class Controller2D : MonoBehaviour {
         animator.SetBool(ANIMATION_WALL, collisions.hHit);
         animator.SetBool(ANIMATION_FACING, FacingRight);
         animator.SetBool(ANIMATION_LADDER, OnLadder);
+        animator.SetBool(ANIMATION_INVULNERABLE, Invulnerable);
     }
 
     /// <summary>
@@ -337,7 +376,7 @@ public class Controller2D : MonoBehaviour {
                 rayLength, pConfig.groundMask);
             Debug.DrawRay(rayOrigin, Vector2.up * directionY * rayLength, Color.red);
             // for one way platforms
-            if (ignorePlatforms <= 0 && directionY < 0 && !hit) {
+            if (ignorePlatformsTime <= 0 && directionY < 0 && !hit) {
                 hit = Physics2D.Raycast(rayOrigin, Vector2.up * directionY,
                     rayLength, pConfig.owPlatformMask);
             }
@@ -373,7 +412,7 @@ public class Controller2D : MonoBehaviour {
             direction = collisions.groundDirection;
             //speed.x = Mathf.Max(Mathf.Abs(speed.x), Mathf.Abs(speed.y)) * direction;
         }
-        if (CanMove() && !Dashing && dashStaggerTime <= 0) {
+        if (CanMove() && !Dashing && airStaggerTime <= 0) {
             if (direction < 0)
                 FacingRight = false;
             if (direction > 0)
@@ -498,7 +537,7 @@ public class Controller2D : MonoBehaviour {
                 collisions.groundDirection = Mathf.Sign(hit.normal.x);
             } else {
                 // descend steeper slope
-                if ((Dashing || dashStaggerTime > 0) && !actor.dashDownSlopes) {
+                if ((Dashing || airStaggerTime > 0) && !actor.dashDownSlopes) {
                     return;
                 }
                 rayOrigin = (directionX == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + deltaMove;
@@ -558,7 +597,7 @@ public class Controller2D : MonoBehaviour {
                 externalForce.y = 0;
                 animator.SetTrigger(ANIMATION_JUMP);
                 if (actor.jumpCancelStagger) {
-                    dashStaggerTime = 0;
+                    airStaggerTime = 0;
                 }
                 // wall jump
                 if (actor.canWallJump && collisions.hHit && !collisions.below) {
@@ -570,7 +609,7 @@ public class Controller2D : MonoBehaviour {
                     collisions.groundAngle < minWallAngle) {
                     speed.x = actor.maxSpeed * collisions.groundDirection;
                 }
-                ignorePlatforms = 0;
+                ignorePlatformsTime = 0;
             }
         }
     }
@@ -629,7 +668,7 @@ public class Controller2D : MonoBehaviour {
             speed.y = 0;
             externalForce = direction;
             dashCooldown = actor.maxDashCooldown;
-            dashStaggerTime = actor.dashStagger;
+            airStaggerTime = actor.dashStagger;
             Invoke("StopDash", actor.dashDistance / actor.dashSpeed);
         }
     }
@@ -661,14 +700,14 @@ public class Controller2D : MonoBehaviour {
     /// The actor will briefly ignore platforms so it can jump down through them
     /// </summary>
     private void IgnorePlatforms() {
-        ignorePlatforms = owPlatformDelay;
+        ignorePlatformsTime = owPlatformDelay;
     }
 
     /// <summary>
     /// The actor will briefly ignore ladders so it can jump or dash off of them
     /// </summary>
     private void IgnoreLadders() {
-        ignoreLadders = ladderDelay;
+        ignoreLaddersTime = ladderDelay;
     }
 
     /// <summary>
@@ -684,7 +723,7 @@ public class Controller2D : MonoBehaviour {
     /// </summary>
     /// <param name="direction"></param>
     public void ClimbLadder(float direction) {
-        if (ignoreLadders > 0 || Dashing) {
+        if (ignoreLaddersTime > 0 || Dashing) {
             return;
         }
         float radius = myCollider.bounds.extents.x;
@@ -748,30 +787,21 @@ public class Controller2D : MonoBehaviour {
     }
 
     /// <summary>
-    /// Handles knockback force and movement
-    /// </summary>
-    private void UpdateKnockback() {
-        if (KnockedBack) {
-            float directionX = Mathf.Sign(speed.x);
-            float newHSpeed = Mathf.Abs(speed.x) - (pConfig.airFriction * Time.deltaTime);
-            if (newHSpeed <= 0) {
-                newHSpeed = 0;
-                KnockedBack = false;
-            }
-            speed.x = newHSpeed * directionX;
-        }
-    }
-
-    /// <summary>
     /// Updates dash related values
     /// </summary>
     private void UpdateDash() {
         if (dashCooldown > 0) {
             dashCooldown -= Time.deltaTime;
         }
-        if (dashStaggerTime > 0 && !Dashing) {
-            dashStaggerTime -= Time.deltaTime;
-            externalForce *= Mathf.Max(1 - actor.staggerSpeedFalloff * Time.deltaTime, 0);
+    }
+
+    private void UpdateAirStagger() {
+        if (airStaggerTime > 0 && !Dashing) {
+            airStaggerTime -= Time.deltaTime;
+            externalForce = Vector2.MoveTowards(externalForce, Vector2.zero,
+                pConfig.staggerSpeedFalloff * Time.deltaTime);
+            speed = Vector2.MoveTowards(speed, Vector2.zero,
+                pConfig.staggerSpeedFalloff * Time.deltaTime);
         }
     }
 
@@ -779,21 +809,27 @@ public class Controller2D : MonoBehaviour {
     /// Updates timers for different features
     /// </summary>
     private void UpdateTimers() {
-        if (ignorePlatforms > 0) {
-            ignorePlatforms -= Time.deltaTime;
+        if (ignorePlatformsTime > 0) {
+            ignorePlatformsTime -= Time.deltaTime;
         }
-        if (ignoreLadders > 0) {
-            ignoreLadders -= Time.deltaTime;
+        if (ignoreLaddersTime > 0) {
+            ignoreLaddersTime -= Time.deltaTime;
+        }
+        if (stunTime > 0) {
+            stunTime -= Time.deltaTime;
+        }
+        if (invulnerableTime > 0) {
+            invulnerableTime -= Time.deltaTime;
         }
     }
 
     /// <summary>
-    /// Checks if there are any knockbacks or status that stop all forms of movement,
+    /// Checks if there are any stuns or other status that stop all forms of movement,
     /// including jumping and dashing
     /// </summary>
     /// <returns>Whether the actor can move or not</returns>
     public bool CanMove() {
-        return (!KnockedBack);
+        return (!Stunned && !Immobile);
     }
 
     // Used to store temporary locations of raycast origins (the corners of the collider)

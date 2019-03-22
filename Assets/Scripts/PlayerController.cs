@@ -1,20 +1,29 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Actor))]
 [RequireComponent(typeof(Controller2D))]
+[RequireComponent(typeof(CheckpointSystem))]
 /// <summary>
 /// Deals with inputs for player characters
 /// </summary>
 public class PlayerController : MonoBehaviour {
+
+    public float softRespawnDelay = 0.5f;
+    public float softRespawnDuration = 0.5f;
+
     // Other components
-    private Actor actor;
     private Controller2D controller2D;
+    private CameraController cameraController;
+    private CheckpointSystem checkpoint;
 
     // Use this for initialization
     void Start() {
-        actor = GetComponent<Actor>();
         controller2D = GetComponent<Controller2D>();
+        checkpoint = GetComponent<CheckpointSystem>();
+        cameraController = GameObject.FindObjectOfType<CameraController>();
+        if (!cameraController) {
+            Debug.LogError("The scene is missing a camera controller! The player script needs it to work properly!");
+        }
     }
 
     // Update is called once per frame
@@ -36,5 +45,30 @@ public class PlayerController : MonoBehaviour {
         if (Input.GetButtonDown("Dash")) {
             controller2D.Dash(axis);
         }
+    }
+
+    /// <summary>
+    /// Respawns the player at the last soft checkpoint while keeping their current stats
+    /// </summary>
+    public void SoftRespawn() {
+        controller2D.Immobile = true;
+        Invoke("StartSoftRespawn", softRespawnDelay);
+    }
+
+    /// <summary>
+    /// Starts the soft respwan after a delay and fades out the screen
+    /// </summary>
+    private void StartSoftRespawn() {
+        cameraController.FadeOut();
+        Invoke("EndSoftRespawn", softRespawnDuration);
+    }
+
+    /// <summary>
+    /// Ends the soft respwan after the duration ended, repositions the player and fades in the screen
+    /// </summary>
+    private void EndSoftRespawn() {
+        checkpoint.ReturnToSoftCheckpoint();
+        cameraController.FadeIn();
+        controller2D.Immobile = false;
     }
 }

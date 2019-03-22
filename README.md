@@ -19,14 +19,17 @@ There are some different of ways of implementing character movement and controls
 * Moving platforms
 * Crumbling platforms
 * Jump pads
+* Checkpoint system
+* Environment hazards
   
 ### Planned Features
 
 * Ledge grabs
 * Running
 * Ducking/Crawling
-* Environment hazards
-* Checkpoint system
+* Pushable Objects
+* Pressure plates/levers/other triggers
+* Basic combat templates
 
 ## Getting Started
 
