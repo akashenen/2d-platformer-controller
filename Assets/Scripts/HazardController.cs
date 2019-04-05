@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Used for environmental hazards that cause harm to actors
+/// Used for environmental hazards that cause harm to characters
 /// </summary>
 public class HazardController : MonoBehaviour {
 
@@ -37,20 +37,20 @@ public class HazardController : MonoBehaviour {
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision.</param>
     void OnTriggerEnter2D(Collider2D other) {
-        if (playerOnly && pConfig.playerMask != LayerMask.GetMask(LayerMask.LayerToName(other.gameObject.layer))) {
+        if (playerOnly && pConfig.characterMask != LayerMask.GetMask(LayerMask.LayerToName(other.gameObject.layer))) {
             return;
         }
-        Controller2D actor = other.GetComponent<Controller2D>();
-        if (actor && !actor.Invulnerable) {
+        CharacterController2D character = other.GetComponent<CharacterController2D>();
+        if (character && !character.Invulnerable) {
             if (knockbackForce > 0) {
-                Vector2 force = actor.TotalSpeed.normalized * -1 * knockbackForce;
-                actor.Knockback(force, stunDuration);
+                Vector2 force = character.TotalSpeed.normalized * -1 * knockbackForce;
+                character.Knockback(force, stunDuration);
             }
             if (invulnerableDuration > 0) {
-                actor.setInvunerable(invulnerableDuration);
+                character.setInvunerable(invulnerableDuration);
             }
             if (airStagger) {
-                actor.SetAirStagger(stunDuration);
+                character.SetAirStagger(stunDuration);
             }
             PlayerController player = other.GetComponent<PlayerController>();
             if (softRespawn && player) {

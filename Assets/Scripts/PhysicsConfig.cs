@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PhysicsConfig : MonoBehaviour {
+    [Tooltip("Which layers are considered ground")]
     public LayerMask groundMask;
+    [Tooltip("Which layers are considered one way platforms")]
     public LayerMask owPlatformMask;
-    public LayerMask allPlatformsMask;
+    [Tooltip("Which layers are considered ladders")]
     public LayerMask ladderMask;
-    public LayerMask playerMask;
-    public LayerMask enemyMask;
+    [Tooltip("Which layers are considered characters")]
+    public LayerMask characterMask;
+    [Tooltip("Which layers characters can collide with")]
+    public LayerMask characterCollisionMask;
+    [Tooltip("Which layers stand-on objects will move")]
+    public LayerMask standOnCollisionMask;
     public float gravity = -30f;
     public float airFriction = 30f;
     public float groundFriction = 50f;
@@ -25,17 +31,17 @@ public class PhysicsConfig : MonoBehaviour {
         if (owPlatformMask == 0) {
             owPlatformMask = LayerMask.GetMask("OWPlatform");
         }
-        if (allPlatformsMask == 0) {
-            allPlatformsMask = LayerMask.GetMask("Ground", "OWPlatform");
+        if (characterCollisionMask == 0) {
+            characterCollisionMask = LayerMask.GetMask("Ground");
         }
         if (ladderMask == 0) {
             ladderMask = LayerMask.GetMask("Ladder");
         }
-        if (playerMask == 0) {
-            playerMask = LayerMask.GetMask("Player");
+        if (characterMask == 0) {
+            characterMask = LayerMask.GetMask("Character");
         }
-        if (enemyMask == 0) {
-            enemyMask = LayerMask.GetMask("Enemy");
+        if (standOnCollisionMask == 0) {
+            standOnCollisionMask = LayerMask.GetMask("Character", "Box");
         }
     }
 }

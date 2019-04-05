@@ -21,7 +21,7 @@ public class PlatformController : MonoBehaviour {
     private float currentCrumbleTime = 0;
     private float currentRestoreTime = 0;
     private bool crumbled = false;
-    private List<Controller2D> actors = new List<Controller2D>();
+    private List<ObjectController2D> objs = new List<ObjectController2D>();
     private Animator animator;
     private Collider2D myCollider;
     private PhysicsConfig pConfig;
@@ -92,11 +92,11 @@ public class PlatformController : MonoBehaviour {
                     speed.magnitude * Time.deltaTime);
                 Vector2 velocity = newPos - transform.position;
                 if (speed.y > 0) {
-                    MoveActors(velocity);
+                    MoveObjects(velocity);
                     transform.position = newPos;
                 } else {
                     transform.position = newPos;
-                    MoveActors(velocity);
+                    MoveObjects(velocity);
                 }
                 distance = currentWaypoint.transform.position - transform.position;
                 if (distance.magnitude < 0.00001f) {
@@ -109,12 +109,12 @@ public class PlatformController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Moves all the actors touching the platform along it's own direction
+    /// Moves all the objs touching the platform along it's own direction
     /// </summary>
-    /// <param name="velocity">Velocity in which the actors should be moved</param>
-    private void MoveActors(Vector2 velocity) {
-        foreach (Controller2D actor in actors) {
-            actor.Move(velocity);
+    /// <param name="velocity">Velocity in which the objs should be moved</param>
+    private void MoveObjects(Vector2 velocity) {
+        foreach (ObjectController2D obj in objs) {
+            obj.Move(velocity);
         }
     }
 
@@ -124,7 +124,7 @@ public class PlatformController : MonoBehaviour {
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision.</param>
     void OnTriggerEnter2D(Collider2D other) {
-        AttachActor(other);
+        AttachObject(other);
     }
 
     /// <summary>
@@ -133,28 +133,27 @@ public class PlatformController : MonoBehaviour {
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision.</param>
     void OnTriggerStay2D(Collider2D other) {
-        AttachActor(other);
+        AttachObject(other);
     }
 
     /// <summary>
-    /// Tries to attach and actor to the platform if it's not already attached
+    /// Tries to attach and obj to the platform if it's not already attached
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision</param>
-    private void AttachActor(Collider2D other) {
+    private void AttachObject(Collider2D other) {
         if (crumbled) {
             return;
         }
-        Controller2D actor = other.GetComponent<Controller2D>();
-        if (actor && !actors.Contains(actor)) {
-            // doesn't attach to the actor if it's a 1 way platform and the actor is below it
-            if (LayerMask.GetMask(LayerMask.LayerToName(gameObject.layer)) == pConfig.owPlatformMask &&
-                (actor.transform.position.y < transform.position.y || actor.TotalSpeed.y > 0)) {
+        ObjectController2D obj = other.GetComponent<ObjectController2D>();
+        if (obj && !objs.Contains(obj)) {
+            // doesn't attach to the obj if it's a 1 way platform and the obj is below it
+            if (pConfig.owPlatformMask == (pConfig.owPlatformMask | (1 << gameObject.layer)) &&
+                (obj.transform.position.y < transform.position.y || obj.TotalSpeed.y > 0)) {
                 return;
             } else {
-                actors.Add(actor);
+                objs.Add(obj);
                 if (crumbleTime > 0 && currentCrumbleTime <= 0) {
-                    if (!onlyPlayerCrumble ||
-                        LayerMask.GetMask(LayerMask.LayerToName(actor.gameObject.layer)) == pConfig.playerMask) {
+                    if (!onlyPlayerCrumble || obj.GetComponent<PlayerController>()) {
                         currentCrumbleTime = crumbleTime;
                         animator.SetTrigger(ANIMATION_CRUMBLING);
                     }
@@ -169,10 +168,10 @@ public class PlatformController : MonoBehaviour {
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision.</param>
     void OnTriggerExit2D(Collider2D other) {
-        Controller2D actor = other.GetComponent<Controller2D>();
-        if (actor && actors.Contains(actor)) {
-            actors.Remove(actor);
-            actor.ApplyForce(speed);
+        ObjectController2D obj = other.GetComponent<ObjectController2D>();
+        if (obj && objs.Contains(obj)) {
+            objs.Remove(obj);
+            obj.ApplyForce(speed);
         }
     }
 

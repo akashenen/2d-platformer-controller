@@ -2,7 +2,7 @@
 
 2D platformers are one of the first and most widely used game genres, dating back to 1980 and having been adapted and combined with various mechanics and clever twists throughout a large number of titles since then. 
 
-There are some different of ways of implementing character movement and controls for 2D platformers, each with its own pros and cons. The Unity engine offers very complete 2D physics features that allow you to create realistic platformer mechanics easily. Sometimes, however, you might want a more precise and controlled input and movement, rather than a realistic one. This approach makes use of [raycasts](https://docs.unity3d.com/ScriptReference/Physics.Raycast.html) and manual calculations to deal with movement and collisions of an actor in the 2D platformer world in a simple way, while also allowing you to easily change values to tweak how it behaves.
+There are some different of ways of implementing character movement and controls for 2D platformers, each with its own pros and cons. The Unity engine offers very complete 2D physics features that allow you to create realistic platformer mechanics easily. Sometimes, however, you might want a more precise and controlled input and movement, rather than a realistic one. This approach makes use of [raycasts](https://docs.unity3d.com/ScriptReference/Physics.Raycast.html) and manual calculations to deal with movement and collisions of an character in the 2D platformer world in a simple way, while also allowing you to easily change values to tweak how it behaves.
 
 ![Demo Gif](https://github.com/akashenen/2d-platformer-controller/blob/master/Gifs/demo.gif)
 
@@ -33,56 +33,56 @@ There are some different of ways of implementing character movement and controls
 
 ## Getting Started
 
-To use this project you need Unity 2017.1 or higher. 
+To use this project you need Unity 2018.3 or higher.
 
-The main classes used in this project are the [Actor](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Actor.cs), used mainly for attributes and other adjustable values, and the [Controller2D](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/Controller2D.cs), which handles all the movement and collision algorithms.
+The main classes used in this project are the [CharacterData](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/CharacterData.cs), used mainly for attributes and other adjustable values, and the [CharacterController2D](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/CharacterController2D.cs), which handles all the movement and collision algorithms.
 
-### Actor Properties
+### Character Properties
 
 #### Movement
 
-* **maxSpeed:** The maximum horizontal speed the actor can reach
-* **accelerationTime:** How much time (in seconds) an actor will take to reach maximum horizontal speed. A value of 0 will allow the actor to reach maximum speed instantly
-* **decelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed. A value of 0 will allow the actor to stop instantly
-* **canUseSlopes:** If your game doesn't have slopes, you can disable this option so the actor never checks or adjusts for slopes, saving some performance
+* **maxSpeed:** The maximum horizontal speed the character can reach
+* **accelerationTime:** How much time (in seconds) an character will take to reach maximum horizontal speed. A value of 0 will allow the character to reach maximum speed instantly
+* **decelerationTime:** How much time (in seconds) an character will take to stop completely from maximum speed. A value of 0 will allow the character to stop instantly
+* **canUseSlopes:** If your game doesn't have slopes, you can disable this option so the character never checks or adjusts for slopes, saving some performance
 
 #### Jumping
 
-* **maxExtraJumps:** How many times an actor can jump again without touching the ground
-* **maxJumpHeight:** How high (in units) the actor can jump while holding the jump button
-* **minJumpHeight:** How high (in units) the actor will keep jumping after releasing the jump button, ending the jump earlier
+* **maxExtraJumps:** How many times an character can jump again without touching the ground
+* **maxJumpHeight:** How high (in units) the character can jump while holding the jump button
+* **minJumpHeight:** How high (in units) the character will keep jumping after releasing the jump button, ending the jump earlier
 * **advancedAirControl:** If enabled, will allow you to set values for acceleration and deceleration while in the air, making it possible to have more stiff (or otherwise) controls while airborne. If disabled, will use the default acceleration and deceleration times for air control
-* **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps
-* **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the actor is not on the ground
+* **airAccelerationTime:** Same as accelerationTime, but only applies if advancedAirControl is enabled and the character is not on the ground. A higher value will make it harder to turn while in the air and will require the player to start running on the ground before being able to make long jumps
+* **airDecelerationTime:** Same as decelerationTime, but only applies if advancedAirControl is enabled and the character is not on the ground
 
 #### Wall Sliding and Jumping
 
-* **canWallSlide:** If enabled, the actor will be able to slide down walls
-* **wallSlideSpeed:** Speed in which the actor will slide down walls if sliding is enabled
-* **canWallJump:** If enabled, the actor will be able to jump from walls
-* **wallJumpSpeed:** Horizonal speed added to the actor when jumping from walls
+* **canWallSlide:** If enabled, the character will be able to slide down walls
+* **wallSlideSpeed:** Speed in which the character will slide down walls if sliding is enabled
+* **canWallJump:** If enabled, the character will be able to jump from walls
+* **wallJumpSpeed:** Horizonal speed added to the character when jumping from walls
 
 #### Dashing
 
-* **canDash:** If enabled, the actor will be able to dash
-* **omnidirectionalDash:** If enabled, the actor will be able to dash in any direction, otherwise only horizontal dashes are allowed
-* **dashDownSlopes:** If enabled, the actor will dash down slopes (like in Mega Man X games), otherwise it will maintain it's height when encountering a down slope
-* **canJumpDuringDash:** If enabled, the actor will be able to jump during of the dash
+* **canDash:** If enabled, the character will be able to dash
+* **omnidirectionalDash:** If enabled, the character will be able to dash in any direction, otherwise only horizontal dashes are allowed
+* **dashDownSlopes:** If enabled, the character will dash down slopes (like in Mega Man X games), otherwise it will maintain it's height when encountering a down slope
+* **canJumpDuringDash:** If enabled, the character will be able to jump during of the dash
 * **jumpCancelStagger:** If enabled, jumping will cancel the stagger time after the dash, allowing it to keep the momentum
 * **dashDistance:** Maximum distance traveled during the dash
-* **dashSpeed:** The speed in which the actor dashes
-* **dashStagger:** Duration of the stagger the actor suffers after dashing, a value of 0 will make dashes have no stagger and keep all momentum
-* **staggerSpeedFalloff:** How much friction the actor will have during the stagger, causing it to lose speed (tweek this value along with dashStagger to make dashes feel good)
-* **maxDashCooldown:** Time before the actor can dash again after dashing
-* **maxAirDashes:** How many times the actor can dash while in the air, a value of 0 will make the actor unable to air dash
+* **dashSpeed:** The speed in which the character dashes
+* **dashStagger:** Duration of the stagger the character suffers after dashing, a value of 0 will make dashes have no stagger and keep all momentum
+* **staggerSpeedFalloff:** How much friction the character will have during the stagger, causing it to lose speed (tweek this value along with dashStagger to make dashes feel good)
+* **maxDashCooldown:** Time before the character can dash again after dashing
+* **maxAirDashes:** How many times the character can dash while in the air, a value of 0 will make the character unable to air dash
 
 #### Ladders
 
-* **ladderSpeed:** How fast the actor can move up and down slopes
-* **ladderAccelerationTime:** How much time (in seconds) an actor will take to reach maximum speed on ladders. A value of 0 will allow the actor to reach its maximum speed instantly
-* **ladderDecelerationTime:** How much time (in seconds) an actor will take to stop completely from maximum speed on ladders. A value of 0 will allow the actor to stop instantly
-* **ladderJumpHeight:** How high (in units) the actor can jump when holding a ladder
-* **ladderJumpSpeed:** Horizonal speed added to the actor when jumping from ladders
+* **ladderSpeed:** How fast the character can move up and down slopes
+* **ladderAccelerationTime:** How much time (in seconds) an character will take to reach maximum speed on ladders. A value of 0 will allow the character to reach its maximum speed instantly
+* **ladderDecelerationTime:** How much time (in seconds) an character will take to stop completely from maximum speed on ladders. A value of 0 will allow the character to stop instantly
+* **ladderJumpHeight:** How high (in units) the character can jump when holding a ladder
+* **ladderJumpSpeed:** Horizonal speed added to the character when jumping from ladders
 
 ### Platform Properties
 
@@ -97,9 +97,9 @@ The main classes used in this project are the [Actor](https://github.com/akashen
 
 ### Physics Config
 
-* **gravity:** How much vertical acceleration will be applied to an actor each second (should be a negative value)
-* **airFriction:** How much speed per second an actor will lose while in the air (doesn't affect player movement, only external forces like knockbacks and jump pads)
-* **groundFriction:** How much speed per second an actor will lose while touching the ground (doesn't affect player movement, only external forces like knockbacks and jump pads)
+* **gravity:** How much vertical acceleration will be applied to an character each second (should be a negative value)
+* **airFriction:** How much speed per second an character will lose while in the air (doesn't affect player movement, only external forces like knockbacks and jump pads)
+* **groundFriction:** How much speed per second an character will lose while touching the ground (doesn't affect player movement, only external forces like knockbacks and jump pads)
 
 ## Authors
 

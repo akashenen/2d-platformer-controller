@@ -3,13 +3,13 @@ using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
-[RequireComponent(typeof(Controller2D))]
+[RequireComponent(typeof(CharacterController2D))]
 /// <summary>
-/// Used to store an actor's attributes
+/// Used to store an character's attributes
 /// </summary>
-public class Actor : MonoBehaviour {
+public class CharacterData : MonoBehaviour {
 
-    // Actor's attibrutes
+    // Character's attibrutes
     [Header("Movement")]
     public float maxSpeed;
     public float accelerationTime;

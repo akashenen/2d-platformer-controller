@@ -22,10 +22,13 @@ public class JumpPad : MonoBehaviour {
     /// </summary>
     /// <param name="other">The other Collider2D involved in this collision.</param>
     void OnTriggerEnter2D(Collider2D other) {
-        Controller2D actor = other.GetComponent<Controller2D>();
-        if (actor) {
-            actor.SetForce(force);
-            actor.ResetJumpsAndDashes();
+        ObjectController2D obj = other.GetComponent<ObjectController2D>();
+        if (obj) {
+            obj.SetForce(force);
+            CharacterController2D character = obj.GetComponent<CharacterController2D>();
+            if (character) {
+                character.ResetJumpsAndDashes();
+            }
             animator.SetTrigger(jumpAnimation);
         }
     }

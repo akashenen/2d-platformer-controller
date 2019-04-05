@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 41342835647678600}
   - component: {fileID: 6468891443108352463}
   - component: {fileID: 41342835647678601}
-  - component: {fileID: 41342835647678602}
-  - component: {fileID: 41342835647678603}
+  - component: {fileID: 7018911988841287167}
+  - component: {fileID: 7737047858355556696}
   - component: {fileID: 1882247456}
   - component: {fileID: 7873687843582337556}
   m_Layer: 11
@@ -104,7 +104,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &41342835647678602
+--- !u!114 &7018911988841287167
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -113,19 +113,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 41342835647678644}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce1e11311d1d79e4dbb70bb8a8a5928f, type: 3}
+  m_Script: {fileID: 11500000, guid: 143e290df8864e94d94e55b4ab599a5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  raySpacing: 0.25
+  raySpacing: 0.125
   skinWidth: 0.015
-  owPlatformDelay: 0.2
+  owPlatformDelay: 0.1
   ladderClimbThreshold: 0.3
   ladderDelay: 0.3
   maxSlopeAngle: 60
-  minWallAngle: 60
+  minWallAngle: 80
   speed: {x: 0, y: 0}
   externalForce: {x: 0, y: 0}
---- !u!114 &41342835647678603
+--- !u!114 &7737047858355556696
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -134,7 +134,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 41342835647678644}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a616d1a0dc50f84e9873695caa70ead, type: 3}
+  m_Script: {fileID: 11500000, guid: f729d1dfa72248641971dc54f0eca573, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   maxSpeed: 8
@@ -159,7 +159,6 @@ MonoBehaviour:
   dashDistance: 3
   dashSpeed: 15
   dashStagger: 0.1
-  staggerSpeedFalloff: 20
   maxDashCooldown: 0.5
   maxAirDashes: 2
   ladderSpeed: 5
@@ -181,6 +180,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   softRespawnDelay: 0.5
   softRespawnDuration: 0.5
+  controls:
+    m_Asset: {fileID: 11400000, guid: 8400442c6f5bce846950171aaaf8b3a0, type: 3}
 --- !u!114 &7873687843582337556
 MonoBehaviour:
   m_ObjectHideFlags: 0
