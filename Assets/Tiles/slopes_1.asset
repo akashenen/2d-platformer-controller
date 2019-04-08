@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: slopes_1
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300002, guid: a3775651fe0c12a4ea15aeb3a035527b, type: 3}
+  m_Sprite: {fileID: -4483550403220453946, guid: a3775651fe0c12a4ea15aeb3a035527b,
+    type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

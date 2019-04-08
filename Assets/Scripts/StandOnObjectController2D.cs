@@ -87,7 +87,7 @@ public class StandOnObjectController2D : ObjectController2D {
             Debug.DrawRay(rayOrigin, Vector2.up, Color.cyan);
             foreach (RaycastHit2D hit in hits) {
                 ObjectController2D obj = hit.transform.GetComponent<ObjectController2D>();
-                if (obj && !objsToMove.Contains(obj)) {
+                if (obj && !objsToMove.Contains(obj) && hit.distance > 0) {
                     objsToMove.Add(obj);
                 }
             }

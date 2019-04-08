@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour {
     private CharacterController2D character;
     private CameraController cameraController;
     private CheckpointSystem checkpoint;
+    private InteractSystem interact;
     private Vector2 axis;
 
     /// <summary>
@@ -25,15 +26,18 @@ public class PlayerController : MonoBehaviour {
     void Awake() {
         character = GetComponent<CharacterController2D>();
         checkpoint = GetComponent<CheckpointSystem>();
+        interact = GetComponent<InteractSystem>();
         cameraController = GameObject.FindObjectOfType<CameraController>();
         if (!cameraController) {
             Debug.LogError("The scene is missing a camera controller! The player script needs it to work properly!");
         }
         controls.Player.Movement.performed += ctx => Move(ctx.ReadValue<Vector2>());
         controls.Player.Movement.cancelled += ctx => Move(Vector2.zero);
-        controls.Player.Jump.performed += Jump;
-        controls.Player.EndJump.performed += EndJump;
-        controls.Player.Dash.performed += Dash;
+        controls.Player.Jump.started += Jump;
+        controls.Player.Jump.cancelled += EndJump;
+        controls.Player.Dash.started += Dash;
+        controls.Player.Interact.started += Interact;
+        controls.Player.AttackA.started += Attack;
     }
 
     /// <summary>
@@ -62,6 +66,18 @@ public class PlayerController : MonoBehaviour {
 
     private void Dash(InputAction.CallbackContext context) {
         character.Dash(axis);
+    }
+
+    private void Interact(InputAction.CallbackContext context) {
+        if (interact) {
+            interact.Interact();
+        }
+    }
+
+    private void Attack(InputAction.CallbackContext context) {
+        if (interact && interact.PickedUpObject) {
+            interact.Throw();
+        }
     }
 
     /// <summary>

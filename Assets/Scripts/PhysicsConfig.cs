@@ -15,6 +15,8 @@ public class PhysicsConfig : MonoBehaviour {
     public LayerMask characterCollisionMask;
     [Tooltip("Which layers stand-on objects will move")]
     public LayerMask standOnCollisionMask;
+    [Tooltip("Which layers are considered interactable objects")]
+    public LayerMask interactableMask;
     public float gravity = -30f;
     public float airFriction = 30f;
     public float groundFriction = 50f;
@@ -42,6 +44,9 @@ public class PhysicsConfig : MonoBehaviour {
         }
         if (standOnCollisionMask == 0) {
             standOnCollisionMask = LayerMask.GetMask("Character", "Box");
+        }
+        if (interactableMask == 0) {
+            interactableMask = LayerMask.GetMask("Box");
         }
     }
 }

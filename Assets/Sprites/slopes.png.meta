@@ -1,10 +1,16 @@
 fileFormatVersion: 2
 guid: a3775651fe0c12a4ea15aeb3a035527b
 TextureImporter:
-  fileIDToRecycleName:
-    21300000: slopes_0
-    21300002: slopes_1
-    21300004: slopes_2
+  internalIDToNameTable:
+  - first:
+      213: 181670879919126630
+    second: slopes_0
+  - first:
+      213: -4483550403220453946
+    second: slopes_1
+  - first:
+      213: 7827714749004013780
+    second: slopes_2
   externalObjects: {}
   serializedVersion: 9
   mipmaps:
@@ -119,6 +125,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: bd7715eb3ccf96d4cb3b45cbb2558632
+      internalID: 181670879919126630
       vertices: []
       indices: 
       edges: []
@@ -147,6 +154,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 55eeed6e52e74994586a3aee33d0b4e0
+      internalID: -4483550403220453946
       vertices: []
       indices: 
       edges: []
@@ -173,6 +181,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 8f313edac0627154086f0aedc110865e
+      internalID: 7827714749004013780
       vertices: []
       indices: 
       edges: []
@@ -181,10 +190,12 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: 05c021c00cea9b84882716dcae77e83f
+    internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
+    secondaryTextures: []
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

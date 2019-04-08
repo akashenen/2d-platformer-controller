@@ -61,6 +61,9 @@ MonoBehaviour:
   standOnCollisionMask:
     serializedVersion: 2
     m_Bits: 6144
+  interactableMask:
+    serializedVersion: 2
+    m_Bits: 4096
   gravity: -30
   airFriction: 30
   groundFriction: 50

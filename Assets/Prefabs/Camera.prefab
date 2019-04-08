@@ -295,20 +295,20 @@ CompositeCollider2D:
   m_ColliderPaths:
   - m_Collider: {fileID: 108764293}
     m_ColliderPaths:
-    - - X: 177842752
-        Y: 79528408
-      - X: -38828544
-        Y: 79528408
-      - X: -38828544
-        Y: -48342800
-      - X: 177842752
-        Y: -48342800
+    - - X: 260393184
+        Y: 193287136
+      - X: -90170936
+        Y: 193287136
+      - X: -90170936
+        Y: -39384676
+      - X: 260393184
+        Y: -39384676
   m_CompositePaths:
     m_Paths:
-    - - {x: 17.784275, y: 7.952841}
-      - {x: -3.8828545, y: 7.952841}
-      - {x: -3.8828545, y: -4.83428}
-      - {x: 17.784275, y: -4.83428}
+    - - {x: 26.039318, y: 19.328714}
+      - {x: -9.017094, y: 19.328714}
+      - {x: -9.017094, y: -3.9384677}
+      - {x: 26.039318, y: -3.9384677}
   m_VertexDistance: 0.0005
 --- !u!50 &8192132658971424988
 Rigidbody2D:
@@ -344,7 +344,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 1
-  m_Offset: {x: 6.9507103, y: 1.5592804}
+  m_Offset: {x: 8.511112, y: 7.695123}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -355,7 +355,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 21.66713, y: 12.787121}
+  m_Size: {x: 35.05641, y: 23.267181}
   m_EdgeRadius: 0
 --- !u!1 &6849151202310540924
 GameObject:
@@ -383,7 +383,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6849151202310540924}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.00000035762787, y: 1.0000002, z: -10}
+  m_LocalPosition: {x: 3.5, y: -1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6849151202624417240}
@@ -471,7 +471,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6849151202356881835}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.0014424, y: 0.9999995, z: -10}
+  m_LocalPosition: {x: 3.5, y: 1.0615323, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3873791635881679631}
@@ -489,9 +489,10 @@ Camera:
   m_ClearFlags: 2
   m_BackGroundColor: {r: 0.41509432, g: 0.41509432, b: 0.41509432, a: 0}
   m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_GateFitMode: 2
   m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
@@ -620,17 +621,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ad980451443d70438faac0bc6c235a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LookaheadTime: 0.3
+  m_LookaheadTime: 0
   m_LookaheadSmoothing: 10
-  m_LookaheadIgnoreY: 1
-  m_XDamping: 0.8
+  m_LookaheadIgnoreY: 0
+  m_XDamping: 1
   m_YDamping: 1
   m_ZDamping: 1
   m_ScreenX: 0.5
-  m_ScreenY: 0.6
+  m_ScreenY: 0.5
   m_CameraDistance: 10
-  m_DeadZoneWidth: 0.2
-  m_DeadZoneHeight: 0.1
+  m_DeadZoneWidth: 0
+  m_DeadZoneHeight: 0
   m_DeadZoneDepth: 0
   m_UnlimitedSoftZone: 0
   m_SoftZoneWidth: 0.8
@@ -648,4 +649,4 @@ MonoBehaviour:
   m_MinimumFOV: 3
   m_MaximumFOV: 60
   m_MinimumOrthoSize: 1
-  m_MaximumOrthoSize: 100
+  m_MaximumOrthoSize: 5000

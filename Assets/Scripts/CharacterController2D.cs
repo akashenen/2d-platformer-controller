@@ -528,8 +528,8 @@ public class CharacterController2D : ObjectController2D {
             Collider2D hit = Physics2D.OverlapCircle(topOrigin + Vector2.up * (speed.y * Time.deltaTime + radius),
                 0, pConfig.ladderMask);
             if (!hit) {
-                hit = Physics2D.OverlapCircle(bottomOrigin + Vector2.up * (speed.y * Time.deltaTime + radius),
-                    0, pConfig.ladderMask);
+                hit = Physics2D.OverlapCircle(bottomOrigin + Vector2.up *
+                    (speed.y * Time.deltaTime + radius - skinWidth * 4), 0, pConfig.ladderMask);
                 if (!hit) {
                     OnLadder = false;
                     if (speed.y > 0) {

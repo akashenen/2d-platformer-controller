@@ -21,19 +21,19 @@ There are some different of ways of implementing character movement and controls
 * Jump pads
 * Checkpoint system
 * Environment hazards
+* Pick up objects
   
 ### Planned Features
 
 * Ledge grabs
 * Running
 * Ducking/Crawling
-* Pushable Objects
 * Pressure plates/levers/other triggers
 * Basic combat templates
 
 ## Getting Started
 
-To use this project you need Unity 2018.3 or higher.
+The base classes of this project can work Unity 2017.1 or higher, but to use with Unity's new input system you'll need 2019.1 or higher.
 
 The main classes used in this project are the [CharacterData](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/CharacterData.cs), used mainly for attributes and other adjustable values, and the [CharacterController2D](https://github.com/akashenen/2d-platformer-controller/blob/master/Assets/Scripts/CharacterController2D.cs), which handles all the movement and collision algorithms.
 

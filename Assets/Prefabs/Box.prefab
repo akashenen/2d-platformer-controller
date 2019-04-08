@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 764141648033633956}
   - component: {fileID: 764141648033633957}
   - component: {fileID: 6812177122459795170}
+  - component: {fileID: 513876059}
   m_Layer: 12
   m_Name: Box
   m_TagString: Untagged
@@ -68,9 +69,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: -1303926481
+  m_SortingLayer: 1
+  m_SortingOrder: -1
   m_Sprite: {fileID: 21300000, guid: f30ac12150d3cb04f9fc6596d35c2e08, type: 3}
   m_Color: {r: 0.7924528, g: 0.5420078, b: 0.7849768, a: 1}
   m_FlipX: 0
@@ -150,3 +151,16 @@ MonoBehaviour:
   minWallAngle: 80
   speed: {x: 0, y: 0}
   externalForce: {x: 0, y: 0}
+--- !u!114 &513876059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 764141648033633953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a331a50c1fc6a4843a5845d6c9cf209f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactable: 1

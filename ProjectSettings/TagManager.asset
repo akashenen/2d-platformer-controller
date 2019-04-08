@@ -47,9 +47,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Actor
+  - name: Object
     uniqueID: 2991040815
     locked: 0
   - name: Foreground
     uniqueID: 256887013
+    locked: 0
+  - name: UI
+    uniqueID: 671517781
     locked: 0
