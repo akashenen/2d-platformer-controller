@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Objects that can support other objects on top of them and will move them when moved
+/// </summary>
 public class StandOnObjectController2D : ObjectController2D {
     // Start is called before the first frame update
     public override void Start() {
@@ -84,7 +87,7 @@ public class StandOnObjectController2D : ObjectController2D {
             rayOrigin += Vector2.right * (verticalRaySpacing * i) * -directionX;
             RaycastHit2D[] hits = Physics2D.RaycastAll(rayOrigin, Vector2.up,
                 rayLength, pConfig.standOnCollisionMask);
-            Debug.DrawRay(rayOrigin, Vector2.up, Color.cyan);
+            Debug.DrawRay(rayOrigin, Vector2.up * rayLength, Color.cyan);
             foreach (RaycastHit2D hit in hits) {
                 ObjectController2D obj = hit.transform.GetComponent<ObjectController2D>();
                 if (obj && !objsToMove.Contains(obj) && hit.distance > 0) {

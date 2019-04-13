@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Pressure Plate
+  m_Controller: {fileID: 9100000, guid: b3c4cca4279c29e40989294a43021b5a, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 72ef22867f0eacc44bd698b7f6a2a6a1, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 0fc799aad22ce084cb45cc1410513f21, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 0745625f7f2626b4faf514ed7a5d770d, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 8b736fac56a4d124abac43f4ee3a34e5, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 4af312be4ad4f7140a1bcbb3655e51e7, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 5125327abf0c2e04e936414d99bfa831, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 5fab4b42a725c0647a845821a99edc45, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 3ef2a245d224c574cad39741867d041c, type: 2}

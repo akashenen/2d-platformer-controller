@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Area that saves the checkpoint if a character enters it
+/// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class ChekpointArea : MonoBehaviour {
 
