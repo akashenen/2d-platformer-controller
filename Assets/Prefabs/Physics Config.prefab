@@ -64,7 +64,7 @@ MonoBehaviour:
   interactableMask:
     serializedVersion: 2
     m_Bits: 12288
-  gravity: -30
-  airFriction: 30
-  groundFriction: 50
+  gravity: -60
+  airFriction: 1
+  groundFriction: 15
   staggerSpeedFalloff: 50

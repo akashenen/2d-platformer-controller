@@ -28,10 +28,12 @@ public class ObjectController2D : MonoBehaviour {
     protected float verticalRayCount;
     protected float gravityScale = 1;
     protected LayerMask collisionMask;
+    protected float ignorePlatformsTime = 0;
 
     protected float minimumMoveThreshold = 0.0001f;
 
     public bool FacingRight { get; set; } // false == left, true == right
+    public bool IgnoreFriction { get; set; }
     public Vector2 TotalSpeed { get { return speed + externalForce; } }
 
     // Start is called before the first frame update
@@ -51,10 +53,9 @@ public class ObjectController2D : MonoBehaviour {
     /// Update is called once pre frame
     /// </summary>
     public virtual void Update() {
-        UpdateExternalForce();
-        UpdateGravity();
         collisions.Reset();
         Move((TotalSpeed) * Time.deltaTime);
+        PostMove();
     }
 
     /// <summary>
@@ -85,15 +86,36 @@ public class ObjectController2D : MonoBehaviour {
     /// Updates the character's vertical speed according to gravity, gravity scale and other properties
     /// </summary>
     protected virtual void UpdateGravity() {
-        speed.y += pConfig.gravity * gravityScale * Time.deltaTime;
+        float g = pConfig.gravity * gravityScale * Time.deltaTime;
+        if (speed.y > 0) {
+            speed.y += g;
+        } else {
+            externalForce.y += g;
+        }
     }
 
     /// <summary>
     /// Reduces the external force over time according to the air or ground frictions
     /// </summary>
     protected virtual void UpdateExternalForce() {
+        if (IgnoreFriction) {
+            return;
+        }
         float friction = collisions.onGround ? pConfig.groundFriction : pConfig.airFriction;
-        externalForce = Vector2.MoveTowards(externalForce, Vector2.zero, friction * Time.deltaTime);
+        externalForce = Vector2.MoveTowards(externalForce, Vector2.zero,
+            externalForce.magnitude * friction * Time.deltaTime);
+    }
+
+    protected virtual void PreMove(ref Vector2 deltaMove) {
+        UpdateRaycastOrigins();
+        float xDir = Mathf.Sign(deltaMove.x);
+        CheckGround(xDir);
+        UpdateExternalForce();
+        UpdateGravity();
+        if (collisions.onSlope && collisions.groundAngle > maxSlopeAngle &&
+            (collisions.groundAngle < minWallAngle || speed.x == 0)) {
+            externalForce.x += -pConfig.gravity * pConfig.groundFriction * collisions.groundDirection * Time.deltaTime / 4;
+        }
     }
 
     /// <summary>
@@ -102,9 +124,8 @@ public class ObjectController2D : MonoBehaviour {
     public virtual Vector2 Move(Vector2 deltaMove) {
         int layer = gameObject.layer;
         gameObject.layer = Physics2D.IgnoreRaycastLayer;
-        UpdateRaycastOrigins();
+        PreMove(ref deltaMove);
         float xDir = Mathf.Sign(deltaMove.x);
-        CheckGround(xDir);
         if (deltaMove.x != 0) {
             // Slope checks and processing
             if (deltaMove.y <= 0) {
@@ -156,11 +177,21 @@ public class ObjectController2D : MonoBehaviour {
             rayOrigin += (direction == 1 ? Vector2.right : Vector2.left) * (verticalRaySpacing * i);
             rayOrigin.y += skinWidth * 2;
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down,
-                skinWidth * 4f, collisionMask + pConfig.owPlatformMask);
+                skinWidth * 4f, collisionMask);
+            if (!hit && ignorePlatformsTime <= 0) {
+                hit = Physics2D.Raycast(rayOrigin, Vector2.down,
+                    skinWidth * 4f, pConfig.owPlatformMask);
+                if (hit.distance <= 0) {
+                    continue;
+                }
+            }
             if (hit) {
                 collisions.onGround = true;
                 collisions.groundAngle = Vector2.Angle(hit.normal, Vector2.up);
                 collisions.groundDirection = Mathf.Sign(hit.normal.x);
+                collisions.groundLayer = hit.collider.gameObject.layer;
+                collisions.vHit = hit;
+                collisions.below = true;
                 Debug.DrawRay(rayOrigin, Vector2.down * skinWidth * 2, Color.blue);
                 break;
             }
@@ -309,7 +340,7 @@ public class ObjectController2D : MonoBehaviour {
                 rayOrigin = (directionX == -1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + deltaMove;
                 hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, collisionMask);
                 Debug.DrawRay(rayOrigin, Vector2.down, Color.yellow);
-                if (hit) {
+                if (hit && hit.collider.gameObject.layer == collisions.groundLayer) {
                     float angle = Vector2.Angle(hit.normal, Vector2.up);
                     float overshoot = 0;
                     if (angle < collisions.groundAngle) {
@@ -346,7 +377,8 @@ public class ObjectController2D : MonoBehaviour {
                 rayOrigin = (directionX == 1 ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight) + deltaMove;
                 hit = Physics2D.Raycast(rayOrigin, Vector2.down, 1f, collisionMask);
                 Debug.DrawRay(rayOrigin, Vector2.down, Color.yellow);
-                if (hit && Mathf.Sign(hit.normal.x) == directionX) {
+                if (hit && Mathf.Sign(hit.normal.x) == directionX &&
+                    hit.collider.gameObject.layer == collisions.groundLayer) {
                     angle = Vector2.Angle(hit.normal, Vector2.up);
                     float overshoot = 0;
                     if (angle > collisions.groundAngle && Mathf.Sign(hit.normal.x) == (FacingRight ? 1 : -1)) {
@@ -370,6 +402,13 @@ public class ObjectController2D : MonoBehaviour {
     }
 
     /// <summary>
+    /// Is called after moving
+    /// </summary>
+    protected void PostMove() {
+        IgnoreFriction = false;
+    }
+
+    /// <summary>
     /// Adds the specified force to the character's total external force
     /// </summary>
     /// <param name="force">Force to be added</param>
@@ -390,7 +429,7 @@ public class ObjectController2D : MonoBehaviour {
     }
 
     /// <summary>
-    /// Used to alter gravity strength for jump hold or other effects
+    /// Used to alter gravity strength
     /// </summary>
     /// <param name="gravityScale">Desired gravity scale</param>
     public void SetGravityScale(float gravityScale) {
@@ -409,6 +448,7 @@ public class ObjectController2D : MonoBehaviour {
         public bool onGround;
         public float groundAngle;
         public float groundDirection;
+        public int groundLayer;
         public bool onSlope { get { return onGround && groundAngle != 0; } }
 
         public void Reset() {

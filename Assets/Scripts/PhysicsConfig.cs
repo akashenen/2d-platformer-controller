@@ -18,8 +18,8 @@ public class PhysicsConfig : MonoBehaviour {
     [Tooltip("Which layers are considered interactable objects")]
     public LayerMask interactableMask;
     public float gravity = -30f;
-    public float airFriction = 30f;
-    public float groundFriction = 50f;
+    public float airFriction = 15f;
+    public float groundFriction = 30f;
     public float staggerSpeedFalloff = 50f;
 
     /// <summary>

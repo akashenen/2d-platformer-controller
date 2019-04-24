@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterData))]
-[RequireComponent(typeof(Animator))]
 /// <summary>
 /// This is a component used alongside CharacterData that controls all the movement and physics operations
 /// </summary>
+[RequireComponent(typeof(CharacterData))]
+[RequireComponent(typeof(Animator))]
 public class CharacterController2D : ObjectController2D {
     // Animation attributes and names
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
@@ -24,9 +24,10 @@ public class CharacterController2D : ObjectController2D {
     private Animator animator;
 
     // Physics properties
-    private float ignorePlatformsTime = 0;
     private float ignoreLaddersTime = 0;
+    [SerializeField]
     private int extraJumps = 0;
+    [SerializeField]
     private int airDashes = 0;
     private float dashCooldown = 0;
     private float airStaggerTime = 0;
@@ -60,10 +61,9 @@ public class CharacterController2D : ObjectController2D {
         UpdateTimers();
         UpdateDash();
         UpdateAirStagger();
-        UpdateExternalForce();
-        UpdateGravity();
         collisions.Reset();
         Move((TotalSpeed) * Time.deltaTime);
+        PostMove();
         SetAnimations();
     }
 
@@ -77,9 +77,8 @@ public class CharacterController2D : ObjectController2D {
     public override Vector2 Move(Vector2 deltaMove) {
         int layer = gameObject.layer;
         gameObject.layer = Physics2D.IgnoreRaycastLayer;
-        UpdateRaycastOrigins();
+        PreMove(ref deltaMove);
         float xDir = Mathf.Sign(deltaMove.x);
-        CheckGround(xDir);
         if (deltaMove.x != 0) {
             // Slope checks and processing
             if (deltaMove.y <= 0 && cData.canUseSlopes) {
@@ -95,8 +94,12 @@ public class CharacterController2D : ObjectController2D {
             }
             HorizontalCollisions(ref deltaMove);
         }
-        if (collisions.onSlope && collisions.groundAngle >= minWallAngle && collisions.groundDirection != xDir &&
-            speed.y < 0) {
+        if (collisions.hHit && cData.canWallSlide && TotalSpeed.y <= 0) {
+            externalForce.y = 0;
+            speed.y = -cData.wallSlideSpeed;
+        }
+        if (collisions.onSlope && collisions.groundAngle >= minWallAngle &&
+            collisions.groundDirection != xDir && speed.y < 0) {
             float sin = Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad);
             float cos = Mathf.Cos(collisions.groundAngle * Mathf.Deg2Rad);
             deltaMove.x = cos * cData.wallSlideSpeed * Time.deltaTime * collisions.groundDirection;
@@ -209,10 +212,6 @@ public class CharacterController2D : ObjectController2D {
         if (!OnLadder && !Dashing && airStaggerTime <= 0) {
             base.UpdateGravity();
         }
-        if (collisions.hHit && cData.canWallSlide && TotalSpeed.y <= 0) {
-            externalForce.y = 0;
-            speed.y = -cData.wallSlideSpeed;
-        }
     }
 
     /// <summary>
@@ -289,10 +288,8 @@ public class CharacterController2D : ObjectController2D {
     /// </summary>
     /// <param name="direction">-1 to 1; negative values = left; positive values = right</param>
     public void Walk(float direction) {
-        if (collisions.onSlope && collisions.groundAngle > maxSlopeAngle &&
-            (collisions.groundAngle < minWallAngle || direction == 0)) {
-            direction = collisions.groundDirection;
-            //speed.x = Mathf.Max(Mathf.Abs(speed.x), Mathf.Abs(speed.y)) * direction;
+        if (collisions.onSlope && collisions.groundAngle > maxSlopeAngle && collisions.groundAngle < minWallAngle) {
+            direction = 0;
         }
         if (CanMove() && !Dashing && airStaggerTime <= 0) {
             if (direction < 0)
@@ -314,7 +311,8 @@ public class CharacterController2D : ObjectController2D {
             if (acc > 0) {
                 if (Mathf.Abs(speed.x) < cData.maxSpeed) {
                     speed.x += direction * (1 / acc) * cData.maxSpeed * Time.deltaTime;
-                    speed.x = Mathf.Min(Mathf.Abs(speed.x), cData.maxSpeed) * Mathf.Sign(speed.x);
+                    speed.x = Mathf.Min(Mathf.Abs(speed.x), cData.maxSpeed * Mathf.Abs(direction)) *
+                        Mathf.Sign(speed.x);
                 }
             } else {
                 speed.x = cData.maxSpeed * direction;
@@ -336,7 +334,7 @@ public class CharacterController2D : ObjectController2D {
         if (CanMove() && (!Dashing || cData.canJumpDuringDash)) {
             if (collisions.onGround || extraJumps > 0 || (cData.canWallJump && collisions.hHit)) {
                 // air jump
-                if (!collisions.below && !OnLadder)
+                if (!collisions.onGround && !OnLadder)
                     extraJumps--;
                 float height = cData.maxJumpHeight;
                 if (OnLadder) {
@@ -529,7 +527,7 @@ public class CharacterController2D : ObjectController2D {
                 0, pConfig.ladderMask);
             if (!hit) {
                 hit = Physics2D.OverlapCircle(bottomOrigin + Vector2.up *
-                    (speed.y * Time.deltaTime + radius - skinWidth * 4), 0, pConfig.ladderMask);
+                    (speed.y * Time.deltaTime + radius - skinWidth * 3), skinWidth, pConfig.ladderMask);
                 if (!hit) {
                     OnLadder = false;
                     if (speed.y > 0) {

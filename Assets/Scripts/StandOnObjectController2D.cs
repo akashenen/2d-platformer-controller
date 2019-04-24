@@ -22,9 +22,8 @@ public class StandOnObjectController2D : ObjectController2D {
     public override Vector2 Move(Vector2 deltaMove) {
         int layer = gameObject.layer;
         gameObject.layer = Physics2D.IgnoreRaycastLayer;
-        UpdateRaycastOrigins();
+        PreMove(ref deltaMove);
         float xDir = Mathf.Sign(deltaMove.x);
-        CheckGround(xDir);
         if (deltaMove.x != 0) {
             // Slope checks and processing
             if (deltaMove.y <= 0) {

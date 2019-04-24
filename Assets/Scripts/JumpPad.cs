@@ -25,6 +25,7 @@ public class JumpPad : MonoBehaviour {
         ObjectController2D obj = other.GetComponent<ObjectController2D>();
         if (obj) {
             obj.SetForce(force);
+            obj.IgnoreFriction = true;
             CharacterController2D character = obj.GetComponent<CharacterController2D>();
             if (character) {
                 character.ResetJumpsAndDashes();
