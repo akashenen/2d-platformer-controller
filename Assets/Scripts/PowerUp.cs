@@ -4,6 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(AudioSource))]
 public class PowerUp : MonoBehaviour {
 
     public static readonly string ANIMATION_PICKUP = "pickup";
@@ -11,6 +12,9 @@ public class PowerUp : MonoBehaviour {
     public PowerUpType type;
     public float value;
     public bool playerOnly = true;
+    public ParticleSystem powerUpParticles;
+    public Vector2 powerUpOffset;
+    public float destroyDelay;
 
     private Animator animator;
 
@@ -56,6 +60,13 @@ public class PowerUp : MonoBehaviour {
             }
         }
         animator.SetTrigger(ANIMATION_PICKUP);
+        other.GetComponent<Animator>().SetTrigger(ANIMATION_PICKUP);
+        powerUpParticles.transform.position = other.transform.position + (Vector3) powerUpOffset;
+        powerUpParticles.transform.SetParent(other.transform);
+        powerUpParticles.Play();
+        GetComponent<AudioSource>().Play();
+        Destroy(powerUpParticles.gameObject, destroyDelay);
+        Destroy(gameObject, destroyDelay);
     }
 
     public enum PowerUpType {

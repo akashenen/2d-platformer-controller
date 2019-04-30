@@ -22,6 +22,7 @@ public class CharacterController2D : ObjectController2D {
     // Other Componenents
     private CharacterData cData;
     private Animator animator;
+    private CharacterSoundManager soundManager;
 
     // Physics properties
     private float ignoreLaddersTime = 0;
@@ -49,6 +50,7 @@ public class CharacterController2D : ObjectController2D {
     public override void Start() {
         cData = GetComponent<CharacterData>();
         animator = GetComponent<Animator>();
+        soundManager = GetComponent<CharacterSoundManager>();
         OnLadder = false;
         Dashing = false;
         base.Start();
@@ -371,6 +373,9 @@ public class CharacterController2D : ObjectController2D {
                     speed.x = cData.maxSpeed * collisions.groundDirection;
                 }
                 ignorePlatformsTime = 0;
+                if (soundManager) {
+                    soundManager.PlayJumpSound();
+                }
             }
         }
     }

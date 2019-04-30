@@ -6,6 +6,7 @@ public class JumpPad : MonoBehaviour {
     public Vector2 force;
 
     private Animator animator;
+    private AudioSource audioSource;
     private string jumpAnimation = "jump";
 
     /// <summary>
@@ -14,6 +15,7 @@ public class JumpPad : MonoBehaviour {
     /// </summary>
     void Start() {
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     /// <summary>
@@ -31,6 +33,9 @@ public class JumpPad : MonoBehaviour {
                 character.ResetJumpsAndDashes();
             }
             animator.SetTrigger(jumpAnimation);
+            if (audioSource) {
+                audioSource.Play();
+            }
         }
     }
 }
