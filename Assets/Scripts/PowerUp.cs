@@ -15,6 +15,7 @@ public class PowerUp : MonoBehaviour {
     public ParticleSystem powerUpParticles;
     public Vector2 powerUpOffset;
     public float destroyDelay;
+    public Color color;
 
     private Animator animator;
 
@@ -24,6 +25,10 @@ public class PowerUp : MonoBehaviour {
     /// </summary>
     void Start() {
         animator = GetComponent<Animator>();
+        foreach (var p in GetComponentsInChildren<ParticleSystem>()) {
+            ParticleSystem.MainModule main = p.main;
+            main.startColor = color;
+        }
     }
 
     /// <summary>
@@ -63,7 +68,10 @@ public class PowerUp : MonoBehaviour {
         other.GetComponent<Animator>().SetTrigger(ANIMATION_PICKUP);
         powerUpParticles.transform.position = other.transform.position + (Vector3) powerUpOffset;
         powerUpParticles.transform.SetParent(other.transform);
+        ParticleSystem.MainModule main = powerUpParticles.main;
+        main.startColor = color;
         powerUpParticles.Play();
+        other.GetComponentInChildren<SpriteRenderer>().material.SetColor("_GlowColor", color);
         GetComponent<AudioSource>().Play();
         Destroy(powerUpParticles.gameObject, destroyDelay);
         Destroy(gameObject, destroyDelay);

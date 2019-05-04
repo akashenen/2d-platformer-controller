@@ -50,11 +50,11 @@ public class ObjectController2D : MonoBehaviour {
     }
 
     /// <summary>
-    /// Update is called once pre frame
+    /// This function is called every fixed framerate frame, if the MonoBehaviour is enabled.
     /// </summary>
-    public virtual void Update() {
+    public virtual void FixedUpdate() {
         collisions.Reset();
-        Move((TotalSpeed) * Time.deltaTime);
+        Move((TotalSpeed) * Time.fixedDeltaTime);
         PostMove();
     }
 
@@ -86,7 +86,7 @@ public class ObjectController2D : MonoBehaviour {
     /// Updates the character's vertical speed according to gravity, gravity scale and other properties
     /// </summary>
     protected virtual void UpdateGravity() {
-        float g = pConfig.gravity * gravityScale * Time.deltaTime;
+        float g = pConfig.gravity * gravityScale * Time.fixedDeltaTime;
         if (speed.y > 0) {
             speed.y += g;
         } else {
@@ -103,7 +103,7 @@ public class ObjectController2D : MonoBehaviour {
         }
         float friction = collisions.onGround ? pConfig.groundFriction : pConfig.airFriction;
         externalForce = Vector2.MoveTowards(externalForce, Vector2.zero,
-            externalForce.magnitude * friction * Time.deltaTime);
+            externalForce.magnitude * friction * Time.fixedDeltaTime);
     }
 
     protected virtual void PreMove(ref Vector2 deltaMove) {
@@ -114,7 +114,7 @@ public class ObjectController2D : MonoBehaviour {
         UpdateGravity();
         if (collisions.onSlope && collisions.groundAngle > maxSlopeAngle &&
             (collisions.groundAngle < minWallAngle || speed.x == 0)) {
-            externalForce.x += -pConfig.gravity * pConfig.groundFriction * collisions.groundDirection * Time.deltaTime / 4;
+            externalForce.x += -pConfig.gravity * pConfig.groundFriction * collisions.groundDirection * Time.fixedDeltaTime / 4;
         }
     }
 

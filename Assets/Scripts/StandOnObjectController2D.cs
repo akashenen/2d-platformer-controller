@@ -11,9 +11,11 @@ public class StandOnObjectController2D : ObjectController2D {
         base.Start();
     }
 
-    // Update is called once per frame
-    public override void Update() {
-        base.Update();
+    /// <summary>
+    /// This function is called every fixed framerate frame, if the MonoBehaviour is enabled.
+    /// </summary>
+    public override void FixedUpdate() {
+        base.FixedUpdate();
     }
 
     /// <summary>

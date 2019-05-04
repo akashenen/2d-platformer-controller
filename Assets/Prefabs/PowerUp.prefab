@@ -99,6 +99,7 @@ MonoBehaviour:
   powerUpParticles: {fileID: 5295942286411803142}
   powerUpOffset: {x: 0, y: 1}
   destroyDelay: 1
+  color: {r: 0.2783019, g: 0.7907076, b: 1, a: 1}
 --- !u!82 &6543962138006430230
 AudioSource:
   m_ObjectHideFlags: 0

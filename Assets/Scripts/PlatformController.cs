@@ -45,18 +45,20 @@ public class PlatformController : MonoBehaviour {
         }
     }
 
-    // Update is called once per frame
-    void Update() {
+    /// <summary>
+    /// This function is called every fixed framerate frame, if the MonoBehaviour is enabled.
+    /// </summary>
+    void FixedUpdate() {
         if (crumbled) {
             if (currentRestoreTime > 0) {
-                currentRestoreTime -= Time.deltaTime;
+                currentRestoreTime -= Time.fixedDeltaTime;
                 if (currentRestoreTime <= 0) {
                     Restore();
                 }
             }
         } else {
             if (currentCrumbleTime > 0) {
-                currentCrumbleTime -= Time.deltaTime;
+                currentCrumbleTime -= Time.fixedDeltaTime;
                 if (currentCrumbleTime <= 0) {
                     crumbled = true;
                     animator.SetTrigger(ANIMATION_CRUMBLE);
@@ -68,20 +70,20 @@ public class PlatformController : MonoBehaviour {
             }
             if (currentWaypoint) {
                 if (currentWaitTime > 0) {
-                    currentWaitTime -= Time.deltaTime;
+                    currentWaitTime -= Time.fixedDeltaTime;
                     return;
                 }
                 Vector2 distance = currentWaypoint.transform.position - transform.position;
                 if (distance.magnitude <= decelerationDistance) {
                     if (distance.magnitude > 0) {
-                        speed -= Time.deltaTime * distance.normalized * maxSpeed * maxSpeed /
+                        speed -= Time.fixedDeltaTime * distance.normalized * maxSpeed * maxSpeed /
                             (2 * decelerationDistance);
                     } else {
                         speed = Vector2.zero;
                     }
                 } else if (speed.magnitude < maxSpeed) {
                     if (accelerationDistance > 0) {
-                        speed += Time.deltaTime * distance.normalized * maxSpeed * maxSpeed /
+                        speed += Time.fixedDeltaTime * distance.normalized * maxSpeed * maxSpeed /
                             (2 * accelerationDistance);
                     }
                     if (speed.magnitude > maxSpeed || accelerationDistance <= 0) {
@@ -89,7 +91,7 @@ public class PlatformController : MonoBehaviour {
                     }
                 }
                 Vector3 newPos = Vector2.MoveTowards(transform.position, currentWaypoint.transform.position,
-                    speed.magnitude * Time.deltaTime);
+                    speed.magnitude * Time.fixedDeltaTime);
                 Vector2 velocity = newPos - transform.position;
                 if (speed.y > 0) {
                     MoveObjects(velocity);
