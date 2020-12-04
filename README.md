@@ -22,13 +22,13 @@ There are some different of ways of implementing character movement and controls
 * Checkpoint system
 * Environment hazards
 * Pick up objects
+* Pressure plates/levers/other triggers
   
 ### Planned Features
 
 * Ledge grabs
 * Running
 * Ducking/Crawling
-* Pressure plates/levers/other triggers
 * Basic combat templates
 
 ## Getting Started
