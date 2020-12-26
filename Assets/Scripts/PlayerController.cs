@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController2D))]
 [RequireComponent(typeof(CheckpointSystem))]
@@ -31,10 +31,11 @@ public class PlayerController : MonoBehaviour {
         if (!cameraController) {
             Debug.LogError("The scene is missing a camera controller! The player script needs it to work properly!");
         }
+        controls = new InputMaster();
         controls.Player.Movement.performed += ctx => Move(ctx.ReadValue<Vector2>());
-        controls.Player.Movement.cancelled += ctx => Move(Vector2.zero);
+        controls.Player.Movement.canceled += ctx => Move(Vector2.zero);
         controls.Player.Jump.started += Jump;
-        controls.Player.Jump.cancelled += EndJump;
+        controls.Player.Jump.canceled += EndJump;
         controls.Player.Dash.started += Dash;
         controls.Player.Interact.started += Interact;
         controls.Player.AttackA.started += Attack;
