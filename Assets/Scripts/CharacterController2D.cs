@@ -146,6 +146,7 @@ public class CharacterController2D : ObjectController2D {
     /// <param name="deltaMove">The current object deltaMove used for the raycast lenght</param>
     protected override void VerticalCollisions(ref Vector2 deltaMove) {
         if (OnLadder) {
+            collisions.Reset();
             Vector2 origin = myCollider.bounds.center + Vector3.up *
                 (myCollider.bounds.extents.y * Mathf.Sign(deltaMove.y) + deltaMove.y);
             Collider2D hit = Physics2D.OverlapCircle(origin, 0, collisionMask);
