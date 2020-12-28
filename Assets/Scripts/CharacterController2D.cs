@@ -11,6 +11,7 @@ public class CharacterController2D : ObjectController2D {
     // Animation attributes and names
     private static readonly string ANIMATION_H_SPEED = "hSpeed";
     private static readonly string ANIMATION_V_SPEED = "vSpeed";
+    private static readonly string ANIMATION_EX_SPEED = "exSpeed";
     private static readonly string ANIMATION_JUMP = "jump";
     private static readonly string ANIMATION_GROUNDED = "grounded";
     private static readonly string ANIMATION_DASHING = "dashing";
@@ -23,6 +24,8 @@ public class CharacterController2D : ObjectController2D {
     private CharacterData cData;
     private Animator animator;
     private CharacterSoundManager soundManager;
+    [SerializeField]
+    private SpriteRenderer visual;
 
     // Physics properties
     private float ignoreLaddersTime = 0;
@@ -38,8 +41,8 @@ public class CharacterController2D : ObjectController2D {
 
     // Public propoerties
     public bool OnLadder { get; set; }
-    public bool Stunned { get { return stunTime > 0; } }
-    public bool Invulnerable { get { return invulnerableTime > 0; } }
+    public bool Stunned => stunTime > 0;
+    public bool Invulnerable => invulnerableTime > 0;
     public bool Immobile { get; set; }
     public bool Dashing { get; set; }
 
@@ -274,8 +277,13 @@ public class CharacterController2D : ObjectController2D {
     /// Updates the character's animator with the movement and collision values
     /// </summary>
     private void SetAnimations() {
-        animator.SetFloat(ANIMATION_H_SPEED, speed.x + externalForce.x);
-        animator.SetFloat(ANIMATION_V_SPEED, speed.y + externalForce.y);
+        if(TotalSpeed.x != 0) {
+            FacingRight = TotalSpeed.x > 0; 
+            if (visual) visual.flipX = !FacingRight;
+        }
+        animator.SetFloat(ANIMATION_H_SPEED, speed.x);
+        animator.SetFloat(ANIMATION_V_SPEED, TotalSpeed.y);
+        animator.SetFloat(ANIMATION_EX_SPEED, externalForce.x);
         animator.SetBool(ANIMATION_GROUNDED, collisions.onGround);
         animator.SetBool(ANIMATION_DASHING, Dashing);
         animator.SetBool(ANIMATION_WALL, collisions.hHit);
@@ -294,11 +302,9 @@ public class CharacterController2D : ObjectController2D {
             direction = 0;
         }
         if (CanMove() && !Dashing && airStaggerTime <= 0) {
-            if (direction < 0)
-                FacingRight = false;
-            if (direction > 0)
-                FacingRight = true;
             if (OnLadder) {
+                FacingRight = direction > 0; 
+                if (visual) visual.flipX = !FacingRight;
                 return;
             }
             float acc = 0f;
@@ -311,11 +317,16 @@ public class CharacterController2D : ObjectController2D {
                 dec = cData.decelerationTime;
             }
             if (acc > 0) {
-                if (Mathf.Abs(speed.x) < cData.maxSpeed) {
-                    speed.x += direction * (1 / acc) * cData.maxSpeed * Time.fixedDeltaTime;
-                    speed.x = Mathf.Min(Mathf.Abs(speed.x), cData.maxSpeed * Mathf.Abs(direction)) *
-                        Mathf.Sign(speed.x);
+                if(externalForce.x != 0 && Mathf.Sign(externalForce.x) != Mathf.Sign(direction)) {
+                    externalForce.x += direction * (1 / acc) * cData.maxSpeed * Time.fixedDeltaTime;
+                } else {
+                    if (Mathf.Abs(speed.x) < cData.maxSpeed) {
+                        speed.x += direction * (1 / acc) * cData.maxSpeed * Time.fixedDeltaTime;
+                        speed.x = Mathf.Min(Mathf.Abs(speed.x), cData.maxSpeed * Mathf.Abs(direction)) *
+                            Mathf.Sign(speed.x);
+                    }
                 }
+                
             } else {
                 speed.x = cData.maxSpeed * direction;
             }
@@ -329,6 +340,8 @@ public class CharacterController2D : ObjectController2D {
         }
     }
 
+    
+
     /// <summary>
     ///  Makes the character jump if possible
     /// </summary>
@@ -336,8 +349,10 @@ public class CharacterController2D : ObjectController2D {
         if (CanMove() && (!Dashing || cData.canJumpDuringDash)) {
             if (collisions.onGround || extraJumps > 0 || (cData.canWallJump && collisions.hHit)) {
                 // air jump
-                if (!collisions.onGround && !OnLadder)
+                if (!collisions.onGround && !OnLadder) {
                     extraJumps--;
+                    externalForce = Vector2.zero;
+                }
                 float height = cData.maxJumpHeight;
                 if (OnLadder) {
                     Vector2 origin = myCollider.bounds.center + Vector3.up * myCollider.bounds.extents.y;

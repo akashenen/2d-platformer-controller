@@ -30,11 +30,11 @@ public class ObjectController2D : MonoBehaviour {
     protected LayerMask collisionMask;
     protected float ignorePlatformsTime = 0;
 
-    protected float minimumMoveThreshold = 0.0001f;
+    protected float minimumMoveThreshold = 0.01f;
 
     public bool FacingRight { get; set; } // false == left, true == right
     public bool IgnoreFriction { get; set; }
-    public Vector2 TotalSpeed { get { return speed + externalForce; } }
+    public Vector2 TotalSpeed => speed + externalForce;
 
     // Start is called before the first frame update
     public virtual void Start() {
@@ -47,6 +47,7 @@ public class ObjectController2D : MonoBehaviour {
             Debug.LogWarning("PhysicsConfig not found on the scene! Using default config.");
         }
         collisionMask = pConfig.characterCollisionMask;
+        FacingRight = true;
     }
 
     /// <summary>
@@ -104,6 +105,9 @@ public class ObjectController2D : MonoBehaviour {
         float friction = collisions.onGround ? pConfig.groundFriction : pConfig.airFriction;
         externalForce = Vector2.MoveTowards(externalForce, Vector2.zero,
             externalForce.magnitude * friction * Time.fixedDeltaTime);
+        if(externalForce.magnitude <= minimumMoveThreshold) {
+            externalForce = Vector2.zero;
+        }
     }
 
     protected virtual void PreMove(ref Vector2 deltaMove) {

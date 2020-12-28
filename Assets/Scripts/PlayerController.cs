@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour {
     /// <summary>
     /// Update is called every frame, if the MonoBehaviour is enabled.
     /// </summary>
-    void Update() {
+    void FixedUpdate() {
         character.Walk(axis.x);
         character.ClimbLadder(axis.y);
     }
