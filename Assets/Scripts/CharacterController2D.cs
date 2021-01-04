@@ -304,8 +304,10 @@ public class CharacterController2D : ObjectController2D {
         }
         if (CanMove() && !Dashing && airStaggerTime <= 0) {
             if (OnLadder) {
-                FacingRight = direction > 0; 
-                if (visual) visual.flipX = !FacingRight;
+                if(direction != 0) {
+                    FacingRight = direction > 0; 
+                    if (visual) visual.flipX = !FacingRight;
+                }
                 return;
             }
             float acc = 0f;
